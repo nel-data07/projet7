@@ -1,0 +1,6 @@
+artifact_location: mlflow-artifacts:/688656324262785524
+creation_time: 1732470187600
+experiment_id: '688656324262785524'
+last_update_time: 1732470187600
+lifecycle_stage: active
+name: Credit Scoring Model

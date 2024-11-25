@@ -1,0 +1,15 @@
+artifact_uri: mlflow-artifacts:/688656324262785524/f618b7f889b743698e62522f7df5791a/artifacts
+end_time: 1732472347564
+entry_point_name: ''
+experiment_id: '688656324262785524'
+lifecycle_stage: active
+run_id: f618b7f889b743698e62522f7df5791a
+run_name: RandomForest optimization
+run_uuid: f618b7f889b743698e62522f7df5791a
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1732472326679
+status: 3
+tags: []
+user_id: user

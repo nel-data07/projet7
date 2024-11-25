@@ -1,0 +1,15 @@
+artifact_uri: mlflow-artifacts:/688656324262785524/d9a4c6301242471eb75bd227da3c58cd/artifacts
+end_time: 1732470921502
+entry_point_name: ''
+experiment_id: '688656324262785524'
+lifecycle_stage: active
+run_id: d9a4c6301242471eb75bd227da3c58cd
+run_name: LightGBM optimization
+run_uuid: d9a4c6301242471eb75bd227da3c58cd
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1732470908881
+status: 3
+tags: []
+user_id: user
