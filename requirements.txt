@@ -3,4 +3,5 @@ pandas
 numpy
 lightgbm
 evidently
+pytest
 
