@@ -1,4 +1,4 @@
-name: Deploy API
+name: Déploiement et tests unitaires
 
 on:
   push:
@@ -8,16 +8,21 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.8'
-      - name: Install dependencies
-        run: |
-          pip install -r requirements.txt
-      - name: Run API
-        run: |
-          python app.py
 
+    steps:
+    - name: Checkout du code
+      uses: actions/checkout@v3
+
+    - name: Configurer Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.8'
+
+    - name: Installer les dépendances
+      run: pip install -r requirements.txt
+
+    - name: Exécuter les tests unitaires
+      run: pytest
+
+    - name: Lancer l'API 
+      run: python app.py
