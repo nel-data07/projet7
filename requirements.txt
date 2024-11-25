@@ -4,4 +4,4 @@ numpy
 lightgbm
 evidently
 pytest
-
+gunicorn
