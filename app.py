@@ -2,7 +2,7 @@
  "cells": [
   {
    "cell_type": "code",
-   "execution_count": 2,
+   "execution_count": 12,
    "id": "88e9829e-fc03-459e-930e-8de794816ef1",
    "metadata": {},
    "outputs": [
@@ -20,8 +20,8 @@
     "from evidently.metric_preset import DataDriftPreset\n",
     "\n",
     "# Charger les datasets\n",
-    "train_data = pd.read_csv(\"application_train.csv\")\n",
-    "test_data = pd.read_csv(\"application_test.csv\")\n",
+    "train_data = pd.read_csv(\"/Users/Nelly/Desktop/projet 7/data/application_train.csv\")\n",
+    "test_data = pd.read_csv(\"/Users/Nelly/Desktop/projet 7/data/application_test.csv\")\n",
     "\n",
     "# Créer un rapport de data drift\n",
     "data_drift_report = Report(metrics=[DataDriftPreset()])\n",
@@ -42,7 +42,7 @@
   },
   {
    "cell_type": "code",
-   "execution_count": null,
+   "execution_count": 6,
    "id": "ba0b62ce-5366-46ef-b17c-096e9e7449d4",
    "metadata": {},
    "outputs": [
