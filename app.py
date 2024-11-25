@@ -25,7 +25,7 @@ def predict():
         # Vérifier si des données ont été envoyées
         if not request.is_json:
             return jsonify({"error": "Les données doivent être au format JSON."}), 400
-
+    
         # Récupérer les données JSON
         data = request.get_json()
 
@@ -45,7 +45,7 @@ def predict():
 
         # Retourner les prédictions sous forme de liste
         return jsonify({"predictions": predictions.tolist()}), 200
- except Exception as e:
+    except Exception as e:
         # Gérer les erreurs et retourner une réponse claire
         return jsonify({"error": f"Une erreur s'est produite : {str(e)}"}), 500
 
