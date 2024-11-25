@@ -6,8 +6,7 @@ import pandas as pd
 try:
     model = lgb.Booster(model_file="lightgbm_model_final.txt")
 except Exception as e:
-    raise RuntimeError(f"Erreur lors du chargement du modèle LightGBM : 
-{str(e)}")
+    raise RuntimeError(f"Erreur lors du chargement du modèle LightGBM : {str(e)}")
 
 app = Flask(__name__)
 
