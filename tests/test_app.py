@@ -1,53 +1,27 @@
-{
- "cells": [
-  {
-   "cell_type": "code",
-   "execution_count": None,
-   "id": "fb89c71e-95b7-4bc6-8d00-21bcd2fb125d",
-   "metadata": {},
-   "outputs": [],
-   "source": [
-    "import pytest\n",
-    "from app import app  # Importez votre application Flask\n",
-    "\n",
-    "@pytest.fixture\n",
-    "def client():\n",
-    "    app.config['TESTING'] = True\n",
-    "    with app.test_client() as client:\n",
-    "        yield client\n",
-    "\n",
-    "def test_index(client):\n",
-    "    \"\"\"Test pour vérifier si la route principale fonctionne\"\"\"\n",
-    "    response = client.get('/')\n",
-    "    assert response.status_code == 200\n",
-    "\n",
-    "def test_predict(client):\n",
-    "    \"\"\"Test pour l'endpoint de prédiction\"\"\"\n",
-    "    response = client.post('/predict', json={\"feature1\": 1.5, \"feature2\": 2.5})\n",
-    "    assert response.status_code == 200\n",
-    "    assert \"predictions\" in response.get_json()"
-   ]
-  }
- ],
- "metadata": {
-  "kernelspec": {
-   "display_name": "Python 3 (ipykernel)",
-   "language": "python",
-   "name": "python3"
-  },
-  "language_info": {
-   "codemirror_mode": {
-    "name": "ipython",
-    "version": 3
-   },
-   "file_extension": ".py",
-   "mimetype": "text/x-python",
-   "name": "python",
-   "nbconvert_exporter": "python",
-   "pygments_lexer": "ipython3",
-   "version": "3.11.7"
-  }
- },
- "nbformat": 4,
- "nbformat_minor": 5
-}
+import pytest
+import os
+import sys
+
+# Ajoutez la racine du projet au chemin Python
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+from app import app  # Importez votre application Flask
+
+@pytest.fixture
+def client():
+    app.config['TESTING'] = True
+    with app.test_client() as client:
+        yield client
+
+def test_index(client):
+    """Test pour vérifier si la route principale fonctionne"""
+    response = client.get('/')
+    assert response.status_code == 200
+
+def test_predict(client):
+    """Test pour l'endpoint de prédiction"""
+    response = client.post('/predict', json={"feature1": 1.5, "feature2": 
+2.5})
+    assert response.status_code == 200
+    assert "predictions" in response.get_json()
+
