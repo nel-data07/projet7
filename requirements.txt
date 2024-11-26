@@ -5,4 +5,7 @@ pandas
 numpy
 evidently
 pytest
-
+requests
+streamlit
+shap
+matplotlib
