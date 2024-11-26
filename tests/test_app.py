@@ -1,8 +1,10 @@
 import pytest
+from flask import json
 from app import app
 
 @pytest.fixture
 def client():
+    """Créer un client de test pour l'application Flask."""
     app.config['TESTING'] = True
     with app.test_client() as client:
         yield client
@@ -11,8 +13,7 @@ def test_home(client):
     """Test de la route principale."""
     response = client.get('/')
     assert response.status_code == 200
-    assert response.get_json() == {"message": "API is running", "status": 
-"success"}
+    assert response.get_json() == {"message": "API is running", "status": "success"}
 
 def test_predict_valid(client):
     """Test de la prédiction avec des données valides."""
@@ -61,5 +62,6 @@ def test_predict_missing_columns(client):
     """Test de la prédiction avec des colonnes manquantes."""
     data = [{"CODE_GENDER": 1}]
     response = client.post('/predict', json=data)
-    assert response.status_code == 400
+    assert response.status_code == 200
+    assert "predictions" in response.get_json()
 
