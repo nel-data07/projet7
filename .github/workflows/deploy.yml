@@ -1,28 +1,35 @@
-name: Déploiement et tests unitaires
+name: Déploiement de l'API
 
 on:
   push:
     branches:
-      - main
+      - main  # Déclenche le workflow sur les push vers la branche 'main'
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-
+    permissions:
+      contents: read
+      deployments: write
     steps:
-    - name: Checkout du code
-      uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v2
 
-    - name: Configurer Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.8'
+      - name: Setup Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.9
 
-    - name: Installer les dépendances
-      run: pip install -r requirements.txt
+      - name: Install dependencies
+        run: pip install -r requirements.txt
 
-    - name: Exécuter les tests unitaires
-      run: pytest
+      - name: Run tests
+        run: pytest --maxfail=5 --disable-warnings
 
-    - name: Lancer l'API 
-      run: python app.py
+      - name: Deploy to Render
+        uses: jorgeLNJunior/render-deploy@v1.4.4
+        with:
+          service_id: ${{ secrets.RENDER_SERVICE_ID }}
+          api_key: ${{ secrets.RENDER_API_KEY }}
+          wait_deploy: true  # Attend la fin du déploiement avant de passer à l'étape suivante
+
