@@ -6,26 +6,26 @@ on:
       - main
 
 jobs:
-  build-and-deploy:
+  deploy:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v2
 
       - name: Setup Python
-        uses: actions/setup-python@v3
+        uses: actions/setup-python@v2
         with:
-          python-version: '3.8'
+          python-version: 3.9
 
       - name: Install dependencies
-        run: |
-          pip install -r requirements.txt
+        run: pip install -r requirements.txt
 
-      - name: Run Tests
-        run: |
-          pytest tests
+      - name: Run tests
+        run: pytest --maxfail=5 --disable-warnings
 
-      - name: Deploy to Cloud
-        # Ajouter une commande pour déployer sur une plateforme comme 
-Heroku, AWS ou Render
+      - name: Deploy with Gunicorn
+        run: gunicorn app:app --bind 0.0.0.0:$PORT &
+
+      - name: Stop Gunicorn
+        run: pkill -f "gunicorn"
 
