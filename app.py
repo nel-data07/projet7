@@ -1,56 +1,46 @@
 import os
-from flask import Flask, jsonify, request
 import lightgbm as lgb
-import pandas as pd
+from flask import Flask, request, jsonify
 
-# Charger le modèle
-model_path = os.path.join(os.path.dirname(__file__), "LightGBM_Model", 
-"model.pkl")
-
-try:
-    model = lgb.Booster(model_file=model_path)
-    print("Modèle LightGBM chargé avec succès.")
-except Exception as e:
-    raise RuntimeError(f"Erreur lors du chargement du modèle LightGBM : 
-{str(e)}")
-
-# Initialiser Flask
 app = Flask(__name__)
 
-# Route principale
-@app.route('/')
-def home():
-    return jsonify({"message": "API is running", "status": "success"}), 
-200
+# Définir le chemin vers le fichier modèle
+model_path = os.path.join(os.path.dirname(__file__), "lightgbm_model_final.txt")
 
-# Route pour les prédictions
-@app.route('/predict', methods=['POST'])
+try:
+    # Charger le modèle LightGBM
+    model = lgb.Booster(model_file=model_path)
+except Exception as e:
+    raise RuntimeError(f"Erreur lors du chargement du modèle LightGBM : {str(e)}")
+
+@app.route("/")
+def home():
+    return jsonify({"message": "L'API fonctionne !"})
+
+@app.route("/predict", methods=["POST"])
 def predict():
     try:
-        # Vérifier si des données ont été envoyées
+        # Vérifiez si les données sont envoyées au format JSON
         if not request.is_json:
-            return jsonify({"error": "Les données doivent être au format 
-JSON."}), 400
+            return jsonify({"error": "Les données doivent être au format JSON."}), 400
 
-        # Récupérer les données
+        # Récupérez les données
         data = request.get_json()
+
+        # Vérifiez que c'est une liste de dictionnaires
+        if not isinstance(data, list):
+            return jsonify({"error": "Les données doivent être une liste de dictionnaires."}), 400
+
+        # Convertir en DataFrame
+        import pandas as pd
         df = pd.DataFrame(data)
 
-        # Vérifier les colonnes manquantes
-        expected_columns = model.feature_name()
-        missing_columns = [col for col in expected_columns if col not in 
-df.columns]
-        if missing_columns:
-            return jsonify({"error": f"Colonnes manquantes : 
-{missing_columns}"}), 400
-
-        # Effectuer la prédiction
+        # Faire une prédiction
         predictions = model.predict(df)
-        return jsonify({"predictions": predictions.tolist()}), 200
+        return jsonify({"predictions": predictions.tolist()})
     except Exception as e:
-        return jsonify({"error": f"Une erreur s'est produite : 
-{str(e)}"}), 500
+        return jsonify({"error": str(e)}), 500
 
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000)
 

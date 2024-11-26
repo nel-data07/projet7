@@ -4,4 +4,5 @@ numpy
 lightgbm
 evidently
 pytest
-gunicorn
+gunicorn==20.1.0
+
