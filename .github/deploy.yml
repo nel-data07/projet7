@@ -1,6 +1,7 @@
 name: Déploiement de l'API
 
 on:
+ workflow_dispatch:
   push:
     branches:
       - main  # Déclenche le workflow sur les push vers la branche 'main'
