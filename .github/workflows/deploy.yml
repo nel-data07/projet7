@@ -12,21 +12,21 @@ jobs:
       contents: read
       deployments: write
     steps:
-      - name: Checkout code
+      - name: Verification du code
         uses: actions/checkout@v2
 
-      - name: Setup Python
-        uses: actions/setup-python@v2
+      - name: configuration python
+        uses: Actions/setup-python@v2
         with:
           python-version: 3.9
 
-      - name: Install dependencies
+      - name: Installer les dependances
         run: pip install -r requirements.txt
 
-      - name: Run tests
+      - name: Executer les tests unitaires
         run: pytest --maxfail=5 --disable-warnings
 
-      - name: Deploy to Render
+      - name: Lancer l'API
         uses: jorgeLNJunior/render-deploy@v1.4.4
         with:
           service_id: ${{ secrets.RENDER_SERVICE_ID }}
