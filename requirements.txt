@@ -1,8 +1,8 @@
 flask
+gunicorn
+lightgbm
 pandas
 numpy
-lightgbm
 evidently
 pytest
-gunicorn==20.1.0
 

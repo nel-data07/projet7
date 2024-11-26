@@ -53,5 +53,8 @@ def predict():
         return jsonify({"error": f"Une erreur s'est produite : {str(e)}"}), 500
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=8000)
+    # Lire le port assigné par Render, par défaut 8000 pour local
+    port = int(os.environ.get('PORT', 8000))
+    app.run(host='0.0.0.0', port=port)
+
 
