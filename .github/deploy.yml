@@ -1,7 +1,6 @@
 name: Déploiement de l'API
 
 on:
- workflow_dispatch:
   push:
     branches:
       - main  # Déclenche le workflow sur les push vers la branche 'main'
@@ -13,25 +12,20 @@ jobs:
       contents: read
       deployments: write
     steps:
-      # Étape 1 : Récupérer le code source
       - name: Checkout code
         uses: actions/checkout@v2
 
-      # Étape 2 : Configurer Python
       - name: Setup Python
         uses: actions/setup-python@v2
         with:
           python-version: 3.9
 
-      # Étape 3 : Installer les dépendances
       - name: Install dependencies
         run: pip install -r requirements.txt
 
-      # Étape 4 : Exécuter les tests unitaires
       - name: Run tests
         run: pytest --maxfail=5 --disable-warnings
 
-      # Étape 5 : Déployer sur Render
       - name: Deploy to Render
         uses: jorgeLNJunior/render-deploy@v1.4.4
         with:
