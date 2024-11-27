@@ -3,8 +3,11 @@ import logging
 import pandas as pd
 import lightgbm as lgb
 from flask import Flask, request, jsonify
+from flask_cors import CORS
+
 
 app = Flask(__name__)
+CORS(app)  # Autoriser toutes les origines pour simplifier
 
 # Activer les logs
 logging.basicConfig(level=logging.INFO)

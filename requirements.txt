@@ -10,3 +10,4 @@ streamlit
 shap
 matplotlib
 scikit-learn
+flask-cors

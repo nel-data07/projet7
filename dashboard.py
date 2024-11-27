@@ -4,6 +4,47 @@ import requests
 # URL de l'API déployée
 API_URL = "https://projet7-gszq.onrender.com/predict"  # Remplacez par votre URL d'API
 
+# Vérification de l'API
+st.header("Vérification de l'API")
+try:
+    # Vérifie si l'API répond
+    response = requests.get(API_URL.replace('/predict', '/'))
+    if response.status_code == 404:
+        st.info("L'API est en ligne mais l'URL /predict doit être utilisée pour les prédictions.")
+    else:
+        st.success("L'API est accessible.")
+    st.write("Statut de l'API :", response.status_code)
+    st.write("Réponse :", response.text)
+except requests.exceptions.RequestException as e:
+    st.error(f"Erreur de connexion à l'API : {e}")
+
+# Test de l'API : Envoi de données
+st.header("Test de l'API : Envoi de données")
+if st.button("Tester une prédiction"):
+    data = [
+        {
+            "CODE_GENDER": 1,
+            "FLAG_OWN_CAR": 0,
+            "CNT_CHILDREN": 2,
+            "AMT_INCOME_TOTAL": 200000,
+            "AMT_CREDIT": 500000,
+            "AMT_ANNUITY": 25000,
+            "AMT_GOODS_PRICE": 450000
+        }
+    ]
+    try:
+        # Envoi des données à l'API
+        response = requests.post(API_URL, json=data)
+        st.write("Statut de l'API :", response.status_code)
+        if response.status_code == 200:
+            st.success("Prédiction réussie !")
+            st.write("Réponse de l'API :", response.json())
+        else:
+            st.error(f"Erreur API : {response.status_code}")
+            st.write("Détails :", response.text)
+    except requests.exceptions.RequestException as e:
+        st.error(f"Erreur de connexion à l'API : {e}")
+
 # Titre du dashboard
 st.title("Dashboard de Prédiction de Non-Remboursement de Crédit")
 
@@ -83,8 +124,8 @@ if st.button("Envoyer les données à l'API"):
                 st.success("Résultat : Risque faible de non-remboursement")
         else:
             st.error(f"Erreur API : {response.status_code}")
-            st.write(response.text)
-    except Exception as e:
+            st.write("Détails :", response.text)
+    except requests.exceptions.RequestException as e:
         st.error(f"Erreur lors de l'appel API : {str(e)}")
 
 # Footer
