@@ -30,9 +30,10 @@ def predict():
         missing_columns = [col for col in expected_columns if col not in df.columns]
         if missing_columns:
             logging.warning(f"Colonnes manquantes détectées : {missing_columns}")
-            # Ajouter les colonnes manquantes remplies de zéros
-            for col in missing_columns:
-                df[col] = 0
+            # Créer un DataFrame temporaire avec les colonnes manquantes remplies de 0
+            missing_df = pd.DataFrame(0, index=df.index, columns=missing_columns)
+            # Ajouter les colonnes manquantes au DataFrame principal
+            df = pd.concat([df, missing_df], axis=1)
 
         # Vérifier et aligner l'ordre des colonnes avec les colonnes attendues
         df = df[expected_columns]
