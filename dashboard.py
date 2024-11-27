@@ -3,7 +3,7 @@ import requests
 import pandas as pd
 
 # URL de l'API déployée
-API_URL = "https://projet7-gszq.onrender.com"  # Remplacez par l'URL correcte
+API_URL = "https://projet7-gszq.onrender.com/predict"  # Remplacez par l'URL correcte
 
 # Titre du dashboard
 st.title("Dashboard de Prédiction de Non-Remboursement de Crédit")
