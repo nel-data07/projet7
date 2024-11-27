@@ -2,6 +2,9 @@ import streamlit as st
 import requests
 import pandas as pd
 
+# Désactiver la surveillance des répertoires
+st.experimental_set_query_params(disable_watchdog=True)
+
 # URL de l'API déployée
 API_URL = "https://projet7-gszq.onrender.com/predict"  # Remplacez par l'URL correcte
 
