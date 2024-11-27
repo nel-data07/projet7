@@ -4,7 +4,7 @@ import pandas as pd
 import os
 import logging
 
-# Configuration des logs
+# Configuration du logging
 logging.basicConfig(level=logging.INFO)
 
 app = Flask(__name__)
@@ -44,14 +44,16 @@ def predict():
 
         # Vérifier les colonnes attendues par le modèle
         expected_columns = model.feature_name()
+        logging.info(f"Colonnes attendues par le modèle : {expected_columns}")
+        
         missing_cols = [col for col in expected_columns if col not in df.columns]
 
         if missing_cols:
             logging.warning(f"Colonnes manquantes : {missing_cols}")
-            # Créer un DataFrame avec les colonnes manquantes
-            missing_df = pd.DataFrame(0, index=df.index, columns=missing_cols)
-            # Concaténer les deux DataFrames
-            df = pd.concat([df, missing_df], axis=1)
+            # Remplir les colonnes manquantes avec des valeurs par défaut (exemple : 0)
+            default_values = {col: 0 for col in missing_cols}  # Remplacez par des valeurs pertinentes si nécessaire
+            for col, value in default_values.items():
+                df[col] = value
 
         # Réorganiser les colonnes pour correspondre à l'ordre attendu
         df = df[expected_columns]
