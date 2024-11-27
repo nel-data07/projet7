@@ -26,14 +26,16 @@ def predict():
         # Transformer les données en DataFrame
         df = pd.DataFrame(input_data)
 
-        # Ajouter les colonnes manquantes avec des valeurs par défaut
+        # Identifier les colonnes manquantes
         missing_columns = [col for col in expected_columns if col not in df.columns]
         if missing_columns:
             logging.warning(f"Colonnes manquantes détectées : {missing_columns}")
-            for col in missing_columns:
-                df[col] = 0  # Vous pouvez ajuster ici pour des valeurs spécifiques si nécessaire
+            # Créer un DataFrame pour les colonnes manquantes
+            missing_df = pd.DataFrame(0, index=df.index, columns=missing_columns)
+            # Ajouter les colonnes manquantes au DataFrame principal
+            df = pd.concat([df, missing_df], axis=1)
 
-        # Vérifier l'ordre des colonnes et aligner avec les colonnes attendues
+        # Vérifier et aligner l'ordre des colonnes avec les colonnes attendues
         df = df[expected_columns]
 
         # Lancer la prédiction
