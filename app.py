@@ -24,28 +24,22 @@ def predict():
         logging.info(f"Données reçues : {input_data}")
 
         # Transformer les données en DataFrame
+        logging.info(f"Préparation des données...")
         df = pd.DataFrame(input_data)
+ # Ajouter les colonnes manquantes
+        for col, default_value in default_columns.items():
+            if col not in df.columns:
+                df[col] = default_value
+        logging.info(f"Données après traitement : {df.head()}")
 
-        # Identifier les colonnes manquantes
-        missing_columns = [col for col in expected_columns if col not in df.columns]
-        if missing_columns:
-            logging.warning(f"Colonnes manquantes détectées : {missing_columns}")
-            # Ajouter les colonnes manquantes avec des zéros
-            for col in missing_columns:
-                df[col] = 0
-
-        # Vérifier et aligner l'ordre des colonnes avec les colonnes attendues
-        df = df.reindex(columns=expected_columns)
-
-        # Lancer la prédiction
+        # Prediction
         predictions = model.predict(df)
+        logging.info(f"Prédictions générées : {predictions}")
 
-        # Retourner les résultats
         return jsonify({'predictions': predictions.tolist()})
-
     except Exception as e:
         logging.error(f"Erreur lors de la prédiction : {e}")
-        return jsonify({'error': str(e)}), 400
+        return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
     print("Colonnes attendues par le modèle :", expected_columns)
