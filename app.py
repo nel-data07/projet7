@@ -13,7 +13,7 @@ app = Flask(__name__)
 model_path = os.path.join(os.path.dirname(__file__), "lightgbm_model_final.txt")
 try:
     model = lgb.Booster(model_file=model_path)
-    logging.info("Modèle chargé avec succès")
+    logging.info("Modèle chargé avec succès.")
 except Exception as e:
     logging.error(f"Erreur lors du chargement du modèle LightGBM : {str(e)}")
     raise RuntimeError(f"Erreur lors du chargement du modèle LightGBM : {str(e)}")
@@ -35,7 +35,7 @@ def predict():
             logging.error("Les données reçues ne sont pas au format JSON.")
             return jsonify({"error": "Les données doivent être au format JSON."}), 400
 
-        # Charger les données en JSON
+        # Charger les données JSON
         data = request.get_json()
         logging.info(f"Données reçues : {data}")
 
@@ -45,15 +45,16 @@ def predict():
         # Vérifier les colonnes attendues par le modèle
         expected_columns = model.feature_name()
         logging.info(f"Colonnes attendues par le modèle : {expected_columns}")
-        
+
+        # Identifier les colonnes manquantes
         missing_cols = [col for col in expected_columns if col not in df.columns]
 
         if missing_cols:
-            logging.warning(f"Colonnes manquantes : {missing_cols}")
-            # Remplir les colonnes manquantes avec des valeurs par défaut (exemple : 0)
-            default_values = {col: 0 for col in missing_cols}  # Remplacez par des valeurs pertinentes si nécessaire
-            for col, value in default_values.items():
-                df[col] = value
+            logging.warning(f"Colonnes manquantes détectées : {missing_cols}")
+            # Remplir les colonnes manquantes avec des valeurs par défaut
+            default_values = {col: 0 for col in missing_cols}  # Remplacer 0 par des valeurs pertinentes si nécessaire
+            missing_df = pd.DataFrame(default_values, index=df.index)
+            df = pd.concat([df, missing_df], axis=1)
 
         # Réorganiser les colonnes pour correspondre à l'ordre attendu
         df = df[expected_columns]
