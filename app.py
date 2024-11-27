@@ -9,6 +9,7 @@ app = Flask(__name__)
 model_path = os.path.join(os.path.dirname(__file__), "lightgbm_model_final.txt")
 try:
     model = lgb.Booster(model_file=model_path)
+    print("Modèle chargé avec succès")
 except Exception as e:
     raise RuntimeError(f"Erreur lors du chargement du modèle LightGBM : {str(e)}")
 
