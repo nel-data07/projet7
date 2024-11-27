@@ -48,5 +48,6 @@ def predict():
         return jsonify({'error': str(e)}), 400
 
 if __name__ == '__main__':
+    print("Colonnes attendues par le modèle :", expected_columns)
     # Exécuter l'application
     app.run(host='0.0.0.0', port=int(os.environ.get("PORT", 5000)))
