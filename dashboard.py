@@ -1,6 +1,12 @@
 import streamlit as st
 import requests
 
+import streamlit as st
+
+# Effacer le cache au démarrage
+st.cache_data.clear()
+st.cache_resource.clear()
+
 # URL de l'API déployée
 API_URL = "https://projet7-gszq.onrender.com/predict"
 
