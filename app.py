@@ -21,7 +21,7 @@ if not os.path.exists(MODEL_PATH):
 
 # Charger le modèle une seule fois avec optimisation
 try:
-    model = lgb.Booster(model_file=MODEL_PATH, params={"device": "cpu", "max_bin": 255})
+    model = lgb.Booster(model_file=MODEL_PATH, params={"device": "cpu", "max_bin": 255,"num_threads": 1})
     logging.info("Modèle chargé avec succès.")
 except Exception as e:
     logging.error(f"Erreur lors du chargement du modèle : {e}")
