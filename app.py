@@ -20,16 +20,14 @@ if not os.path.exists(MODEL_PATH):
     logging.error(f"Modèle introuvable : {MODEL_PATH}")
     raise FileNotFoundError(f"Modèle introuvable : {MODEL_PATH}")
 
-# Charger le modèle une seule fois avec optimisation
+# Colonnes attendues par le modèle (extraites à partir d'un modèle chargé temporairement)
 try:
-    model = lgb.Booster(model_file=MODEL_PATH, params={"device": "cpu", "max_bin": 255,"num_threads": 1})
-    logging.info("Modèle chargé avec succès.")
+    temp_model = lgb.Booster(model_file=MODEL_PATH)
+    expected_columns = temp_model.feature_name()
+    del temp_model  # Supprimer le modèle temporaire
 except Exception as e:
-    logging.error(f"Erreur lors du chargement du modèle : {e}")
+    logging.error(f"Erreur lors de l'extraction des colonnes du modèle : {e}")
     raise e
-
-# Colonnes attendues par le modèle
-expected_columns = model.feature_name()
 
 # Colonnes manquantes avec valeurs par défaut
 default_columns = {
@@ -57,7 +55,7 @@ def index():
 @app.route('/predict', methods=['POST'])
 def predict():
     try:
-        # Charger le modèle dans la fonction
+        # Charger le modèle pour chaque requête
         model = lgb.Booster(model_file=MODEL_PATH)
 
         # Lecture des données reçues
@@ -82,7 +80,6 @@ def predict():
     except Exception as e:
         logging.error(f"Erreur lors de la prédiction : {e}")
         return jsonify({'error': str(e)}), 500
-
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
