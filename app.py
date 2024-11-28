@@ -4,6 +4,7 @@ import pandas as pd
 import lightgbm as lgb
 from flask import Flask, request, jsonify
 from flask_cors import CORS
+import gc
 
 app = Flask(__name__)
 CORS(app)  # Autoriser toutes les origines pour simplifier
@@ -56,33 +57,32 @@ def index():
 @app.route('/predict', methods=['POST'])
 def predict():
     try:
+        # Charger le modèle dans la fonction
+        model = lgb.Booster(model_file=MODEL_PATH)
+
         # Lecture des données reçues
         input_data = request.get_json()
         logging.info(f"Données reçues : {input_data}")
 
-        if not input_data:
-            return jsonify({'error': "Aucune donnée reçue"}), 400
-
         # Préparation des données
         df = pd.DataFrame(input_data)
-
-        # Ajouter les colonnes manquantes avec leurs valeurs par défaut
         for col, default_value in default_columns.items():
             if col not in df.columns:
                 df[col] = default_value
-
-        # Réindexer pour garantir l'ordre des colonnes attendu par le modèle
         df = df.reindex(columns=expected_columns, fill_value=0)
-        logging.info(f"Données après traitement : {df.head()}")
 
-        # Effectuer la prédiction
+        # Prédiction
         predictions = model.predict(df)
-        logging.info(f"Prédictions générées : {predictions}")
+
+        # Libérer la mémoire après chaque requête
+        del model, df
+        gc.collect()
 
         return jsonify({'predictions': predictions.tolist()})
     except Exception as e:
         logging.error(f"Erreur lors de la prédiction : {e}")
         return jsonify({'error': str(e)}), 500
+
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
