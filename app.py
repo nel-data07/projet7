@@ -11,15 +11,21 @@ CORS(app)  # Autoriser toutes les origines pour simplifier
 # Activer les logs
 logging.basicConfig(level=logging.INFO)
 
-# Charger le modèle
+# Chemin du modèle
 MODEL_PATH = "lightgbm_model_final.txt"
-model = lgb.Booster(model_file=MODEL_PATH, params={"device": "cpu", "max_bin": 255})
 
+# Vérification si le fichier modèle existe
 if not os.path.exists(MODEL_PATH):
     logging.error(f"Modèle introuvable : {MODEL_PATH}")
     raise FileNotFoundError(f"Modèle introuvable : {MODEL_PATH}")
 
-model = lgb.Booster(model_file=MODEL_PATH)
+# Charger le modèle une seule fois avec optimisation
+try:
+    model = lgb.Booster(model_file=MODEL_PATH, params={"device": "cpu", "max_bin": 255})
+    logging.info("Modèle chargé avec succès.")
+except Exception as e:
+    logging.error(f"Erreur lors du chargement du modèle : {e}")
+    raise e
 
 # Colonnes attendues par le modèle
 expected_columns = model.feature_name()
@@ -50,26 +56,35 @@ def index():
 @app.route('/predict', methods=['POST'])
 def predict():
     try:
-        # Charger le modèle dans la fonction
-        model = lgb.Booster(model_file=MODEL_PATH)
-
         # Lecture des données reçues
         input_data = request.get_json()
         logging.info(f"Données reçues : {input_data}")
 
+        if not input_data:
+            return jsonify({'error': "Aucune donnée reçue"}), 400
+
         # Préparation des données
         df = pd.DataFrame(input_data)
+
+        # Ajouter les colonnes manquantes avec leurs valeurs par défaut
         for col, default_value in default_columns.items():
             if col not in df.columns:
                 df[col] = default_value
-        df = df.reindex(columns=expected_columns, fill_value=0)
 
-        # Prédiction
+        # Réindexer pour garantir l'ordre des colonnes attendu par le modèle
+        df = df.reindex(columns=expected_columns, fill_value=0)
+        logging.info(f"Données après traitement : {df.head()}")
+
+        # Effectuer la prédiction
         predictions = model.predict(df)
+        logging.info(f"Prédictions générées : {predictions}")
+
         return jsonify({'predictions': predictions.tolist()})
     except Exception as e:
         logging.error(f"Erreur lors de la prédiction : {e}")
         return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=int(os.environ.get("PORT", 5000)))
+    port = int(os.environ.get("PORT", 5000))
+    logging.info(f"Lancement de l'application sur le port {port}")
+    app.run(host='0.0.0.0', port=port)
