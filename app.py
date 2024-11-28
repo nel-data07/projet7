@@ -7,45 +7,33 @@ from flask_cors import CORS
 import gc
 
 app = Flask(__name__)
-CORS(app)  # Autoriser toutes les origines pour simplifier
+CORS(app)  # Autoriser toutes les origines
 
 # Activer les logs
 logging.basicConfig(level=logging.INFO)
 
-# Chemin du modèle
+# Charger le modèle
 MODEL_PATH = "lightgbm_model_final.txt"
 
-# Vérification si le fichier modèle existe
 if not os.path.exists(MODEL_PATH):
     logging.error(f"Modèle introuvable : {MODEL_PATH}")
     raise FileNotFoundError(f"Modèle introuvable : {MODEL_PATH}")
 
-# Colonnes attendues par le modèle (extraites à partir d'un modèle chargé temporairement)
-try:
-    temp_model = lgb.Booster(model_file=MODEL_PATH)
-    expected_columns = temp_model.feature_name()
-    del temp_model  # Supprimer le modèle temporaire
-except Exception as e:
-    logging.error(f"Erreur lors de l'extraction des colonnes du modèle : {e}")
-    raise e
+model = lgb.Booster(model_file=MODEL_PATH)
 
-# Colonnes manquantes avec valeurs par défaut
-default_columns = {
-    'FLAG_OWN_REALTY': 0, 'REGION_POPULATION_RELATIVE': 0.0, 'DAYS_BIRTH': 0,
-    'DAYS_EMPLOYED': 0, 'DAYS_REGISTRATION': 0, 'DAYS_ID_PUBLISH': 0, 'OWN_CAR_AGE': 0,
-    'FLAG_MOBIL': 1, 'FLAG_EMP_PHONE': 0, 'FLAG_WORK_PHONE': 0, 'FLAG_CONT_MOBILE': 1,
-    'FLAG_PHONE': 0, 'FLAG_EMAIL': 0, 'CNT_FAM_MEMBERS': 1, 'REGION_RATING_CLIENT': 1,
-    'REGION_RATING_CLIENT_W_CITY': 1, 'HOUR_APPR_PROCESS_START': 10, 'REG_REGION_NOT_LIVE_REGION': 0,
-    'REG_REGION_NOT_WORK_REGION': 0, 'LIVE_REGION_NOT_WORK_REGION': 0,
-    'REG_CITY_NOT_LIVE_CITY': 0, 'REG_CITY_NOT_WORK_CITY': 0, 'LIVE_CITY_NOT_WORK_CITY': 0,
-    'EXT_SOURCE_1': 0.0, 'EXT_SOURCE_2': 0.0, 'EXT_SOURCE_3': 0.0,
-    'APARTMENTS_AVG': 0.0, 'BASEMENTAREA_AVG': 0.0, 'YEARS_BEGINEXPLUATATION_AVG': 0.0,
-    'YEARS_BUILD_AVG': 0.0, 'COMMONAREA_AVG': 0.0, 'ELEVATORS_AVG': 0.0,
-    'ENTRANCES_AVG': 0.0, 'FLOORSMAX_AVG': 0.0, 'FLOORSMIN_AVG': 0.0,
-    'LANDAREA_AVG': 0.0, 'LIVINGAPARTMENTS_AVG': 0.0, 'LIVINGAREA_AVG': 0.0,
-    'NONLIVINGAPARTMENTS_AVG': 0.0, 'NONLIVINGAREA_AVG': 0.0,
-    'DAYS_EMPLOYED_PERC': 0.0, 'INCOME_CREDIT_PERC': 0.0, 'INCOME_PER_PERSON': 0.0,
-    'ANNUITY_INCOME_PERC': 0.0, 'PAYMENT_RATE': 0.0
+# Colonnes minimales nécessaires pour la prédiction
+required_columns = ["CODE_GENDER", "FLAG_OWN_CAR", "CNT_CHILDREN", "AMT_INCOME_TOTAL",
+                    "AMT_CREDIT", "AMT_ANNUITY", "AMT_GOODS_PRICE"]
+
+# Valeurs par défaut pour les colonnes nécessaires
+default_values = {
+    "CODE_GENDER": 1,
+    "FLAG_OWN_CAR": 0,
+    "CNT_CHILDREN": 0,
+    "AMT_INCOME_TOTAL": 0,
+    "AMT_CREDIT": 0,
+    "AMT_ANNUITY": 0,
+    "AMT_GOODS_PRICE": 0
 }
 
 @app.route('/', methods=['GET'])
@@ -55,25 +43,29 @@ def index():
 @app.route('/predict', methods=['POST'])
 def predict():
     try:
-        # Charger le modèle pour chaque requête
-        model = lgb.Booster(model_file=MODEL_PATH)
-
         # Lecture des données reçues
         input_data = request.get_json()
         logging.info(f"Données reçues : {input_data}")
 
-        # Préparation des données
+        if not input_data:
+            return jsonify({'error': "Aucune donnée reçue"}), 400
+
+        # Transformer les données en DataFrame
         df = pd.DataFrame(input_data)
-        for col, default_value in default_columns.items():
+
+        # Ajouter les colonnes manquantes avec des valeurs par défaut
+        for col, default_value in default_values.items():
             if col not in df.columns:
                 df[col] = default_value
-        df = df.reindex(columns=expected_columns, fill_value=0)
+
+        # Filtrer uniquement les colonnes nécessaires pour le modèle
+        df = df[required_columns]
 
         # Prédiction
         predictions = model.predict(df)
 
         # Libérer la mémoire après chaque requête
-        del model, df
+        del df
         gc.collect()
 
         return jsonify({'predictions': predictions.tolist()})
@@ -82,6 +74,4 @@ def predict():
         return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
-    port = int(os.environ.get("PORT", 5000))
-    logging.info(f"Lancement de l'application sur le port {port}")
-    app.run(host='0.0.0.0', port=port)
+    app.run(host='0.0.0.0', port=int(os.environ.get("PORT", 5000)))
