@@ -7,34 +7,31 @@ from flask_cors import CORS
 import gc
 
 app = Flask(__name__)
-CORS(app)  # Autoriser toutes les origines
+CORS(app)
 
 # Activer les logs
 logging.basicConfig(level=logging.INFO)
 
 # Charger le modèle
-MODEL_PATH = "lightgbm_model_final.txt"
+MODEL_PATH = os.path.join("models", "lightgbm_model.txt")
+FEATURES_PATH = os.path.join("models", "selected_features.txt")
 
 if not os.path.exists(MODEL_PATH):
     logging.error(f"Modèle introuvable : {MODEL_PATH}")
     raise FileNotFoundError(f"Modèle introuvable : {MODEL_PATH}")
 
+if not os.path.exists(FEATURES_PATH):
+    logging.error(f"Fichier des colonnes introuvable : {FEATURES_PATH}")
+    raise FileNotFoundError(f"Fichier des colonnes introuvable : {FEATURES_PATH}")
+
 model = lgb.Booster(model_file=MODEL_PATH)
 
-# Colonnes minimales nécessaires pour la prédiction
-required_columns = ["CODE_GENDER", "FLAG_OWN_CAR", "CNT_CHILDREN", "AMT_INCOME_TOTAL",
-                    "AMT_CREDIT", "AMT_ANNUITY", "AMT_GOODS_PRICE"]
+# Charger les colonnes utilisées pour l'entraînement
+with open(FEATURES_PATH, "r") as f:
+    required_columns = f.read().split(",")
 
 # Valeurs par défaut pour les colonnes nécessaires
-default_values = {
-    "CODE_GENDER": 1,
-    "FLAG_OWN_CAR": 0,
-    "CNT_CHILDREN": 0,
-    "AMT_INCOME_TOTAL": 0,
-    "AMT_CREDIT": 0,
-    "AMT_ANNUITY": 0,
-    "AMT_GOODS_PRICE": 0
-}
+default_values = {col: 0 for col in required_columns}
 
 @app.route('/', methods=['GET'])
 def index():
@@ -54,9 +51,9 @@ def predict():
         df = pd.DataFrame(input_data)
 
         # Ajouter les colonnes manquantes avec des valeurs par défaut
-        for col, default_value in default_values.items():
+        for col in required_columns:
             if col not in df.columns:
-                df[col] = default_value
+                df[col] = 0  # Utiliser une valeur par défaut (ex : 0)
 
         # Filtrer uniquement les colonnes nécessaires pour le modèle
         df = df[required_columns]
@@ -64,14 +61,11 @@ def predict():
         # Prédiction
         predictions = model.predict(df)
 
-        # Libérer la mémoire après chaque requête
-        del df
-        gc.collect()
-
         return jsonify({'predictions': predictions.tolist()})
     except Exception as e:
         logging.error(f"Erreur lors de la prédiction : {e}")
         return jsonify({'error': str(e)}), 500
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=int(os.environ.get("PORT", 5000)))
