@@ -13,8 +13,8 @@ CORS(app)
 logging.basicConfig(level=logging.INFO)
 
 # Charger le modèle
-MODEL_PATH = "./backend/lightgbm_model.txt"
-FEATURES_PATH = "./backend/selected_features.txt"
+MODEL_PATH = "lightgbm_model.txt"
+FEATURES_PATH = "selected_features.txt"
 
 # Vérification des chemins
 if not os.path.exists(MODEL_PATH):
