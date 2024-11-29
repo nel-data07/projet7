@@ -54,7 +54,7 @@ if st.button("Envoyer les données à l'API"):
             st.success(f"Probabilité de non-remboursement : {prob:.2f}")
             
             # Indiquer si le crédit est accepté ou refusé
-            if prob > 0.5:
+            if prob > 0.7:
                 st.error("Résultat : Crédit REFUSÉ (Risque élevé)")
             else:
                 st.success("Résultat : Crédit ACCEPTÉ (Risque faible)")
