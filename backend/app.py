@@ -13,8 +13,8 @@ CORS(app)
 logging.basicConfig(level=logging.INFO)
 
 # Charger le modèle
-MODEL_PATH = "lightgbm_model.txt"
-FEATURES_PATH = "selected_features.txt"
+MODEL_PATH = "backend/lightgbm_model.txt"
+FEATURES_PATH = "backend/selected_features.txt"
 
 # Vérification des chemins
 if not os.path.exists(MODEL_PATH):
@@ -39,10 +39,16 @@ default_values = {col: 0.0 for col in required_columns}
 
 @app.route('/', methods=['GET'])
 def index():
-    return "API en ligne. Utilisez /predict pour les prédictions.", 200
+    """Route principale pour vérifier si l'API est en ligne."""
+    return jsonify({
+        "message": "API en ligne",
+        "status": "success",
+        "routes": ["/", "/predict", "/test-data", "/test-model"]
+    }), 200
 
 @app.route('/predict', methods=['POST'])
 def predict():
+    """Route pour effectuer des prédictions."""
     try:
         total_start_time = time.time()
 
@@ -77,6 +83,34 @@ def predict():
     except Exception as e:
         logging.error(f"Erreur lors de la prédiction : {e}")
         return jsonify({'error': str(e)}), 500
+
+@app.route('/test-data', methods=['GET'])
+def test_data():
+    """Route pour tester la validation des données."""
+    example_data = [{
+        "CODE_GENDER": 1,
+        "FLAG_OWN_CAR": 0,
+        "CNT_CHILDREN": 2,
+        "AMT_INCOME_TOTAL": 202500.0,
+        "AMT_CREDIT": 500000.0,
+        "AMT_ANNUITY": 25000.0,
+        "AMT_GOODS_PRICE": 450000.0
+    }]
+    return jsonify({"example_data": example_data}), 200
+
+@app.route('/test-model', methods=['GET'])
+def test_model():
+    """Route pour tester si le modèle est chargé correctement."""
+    try:
+        # Effectuer une prédiction factice avec des données aléatoires
+        dummy_data = pd.DataFrame([default_values])
+        prediction = model.predict(dummy_data)
+        return jsonify({
+            "status": "success",
+            "dummy_prediction": prediction.tolist()
+        }), 200
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=int(os.environ.get("PORT", 5000)))
