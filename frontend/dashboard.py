@@ -7,8 +7,9 @@ import streamlit as st
 st.cache_data.clear()
 st.cache_resource.clear()
 
-# URL de l'API déployée
+# Récupérer l'URL de l'API depuis une variable d'environnement
 API_URL = "https://projet7-gszq.onrender.com/predict"
+
 
 st.header("Test de l'API")
 

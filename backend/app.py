@@ -4,7 +4,6 @@ import pandas as pd
 import lightgbm as lgb
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-import gc
 import time  # Pour mesurer le temps d'exécution
 
 app = Flask(__name__)
@@ -14,12 +13,10 @@ CORS(app)
 logging.basicConfig(level=logging.INFO)
 
 # Charger le modèle
-MODEL_PATH = os.path.join("models", "lightgbm_model.txt")
-FEATURES_PATH = os.path.join("models", "selected_features.txt")
+MODEL_PATH = "lightgbm_model.txt"
+FEATURES_PATH = "selected_features.txt"
 
-# Mesurer le temps de chargement du modèle
-start_time = time.time()
-
+# Vérification des chemins
 if not os.path.exists(MODEL_PATH):
     logging.error(f"Modèle introuvable : {MODEL_PATH}")
     raise FileNotFoundError(f"Modèle introuvable : {MODEL_PATH}")
@@ -28,15 +25,17 @@ if not os.path.exists(FEATURES_PATH):
     logging.error(f"Fichier des colonnes introuvable : {FEATURES_PATH}")
     raise FileNotFoundError(f"Fichier des colonnes introuvable : {FEATURES_PATH}")
 
+# Charger le modèle
+start_time = time.time()
 model = lgb.Booster(model_file=MODEL_PATH)
 logging.info(f"Modèle chargé en {time.time() - start_time:.2f} secondes.")
 
 # Charger les colonnes utilisées pour l'entraînement
 with open(FEATURES_PATH, "r") as f:
-    required_columns = f.read().split(",")
+    required_columns = f.read().strip().split(",")
 
 # Valeurs par défaut pour les colonnes nécessaires
-default_values = {col: 0 for col in required_columns}
+default_values = {col: 0.0 for col in required_columns}
 
 @app.route('/', methods=['GET'])
 def index():
@@ -45,15 +44,14 @@ def index():
 @app.route('/predict', methods=['POST'])
 def predict():
     try:
-        # Mesurer le temps total de la requête
         total_start_time = time.time()
 
         # Lecture des données reçues
         input_data = request.get_json()
         logging.info(f"Données reçues : {input_data}")
 
-        if not input_data:
-            return jsonify({'error': "Aucune donnée reçue"}), 400
+        if not input_data or not isinstance(input_data, list):
+            return jsonify({'error': "Les données doivent être une liste d'objets JSON"}), 400
 
         # Transformer les données en DataFrame
         df = pd.DataFrame(input_data)
@@ -61,24 +59,24 @@ def predict():
         # Ajouter les colonnes manquantes avec des valeurs par défaut
         for col in required_columns:
             if col not in df.columns:
-                df[col] = 0  # Utiliser une valeur par défaut (ex : 0)
+                logging.warning(f"Colonne manquante ajoutée : {col} avec la valeur par défaut {default_values[col]}")
+                df[col] = default_values[col]
 
         # Filtrer uniquement les colonnes nécessaires pour le modèle
         df = df[required_columns]
 
-        # Mesurer le temps de prédiction
+        # Prédiction
         predict_start_time = time.time()
         predictions = model.predict(df)
         logging.info(f"Prédiction effectuée en {time.time() - predict_start_time:.2f} secondes.")
 
-        # Retour des prédictions
+        # Retourner les résultats
         total_time = time.time() - total_start_time
         logging.info(f"Requête complète traitée en {total_time:.2f} secondes.")
         return jsonify({'predictions': predictions.tolist()})
     except Exception as e:
         logging.error(f"Erreur lors de la prédiction : {e}")
         return jsonify({'error': str(e)}), 500
-
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=int(os.environ.get("PORT", 5000)))

@@ -11,3 +11,5 @@ shap
 matplotlib
 scikit-learn
 flask-cors
+joblib
+
