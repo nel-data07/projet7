@@ -12,21 +12,28 @@ jobs:
       contents: read
       deployments: write
     steps:
-      - name: Verification du code
+      - name: Vérification du code
         uses: actions/checkout@v2
 
-      - name: configuration python
-        uses: Actions/setup-python@v2
+      - name: Configuration Python
+        uses: actions/setup-python@v2
         with:
           python-version: 3.9
 
-      - name: Installer les dependances
+      - name: Installer les dépendances
         run: pip install -r requirements.txt
 
-      - name: Executer les tests unitaires
+      - name: Exécuter les tests unitaires
         run: pytest --maxfail=5 --disable-warnings
 
-      - name: Lancer l'API
+      - name: Assurer que les fichiers backend sont présents
+        run: |
+          if [ ! -f backend/lightgbm_model.txt ]; then
+            echo "Fichier lightgbm_model.txt introuvable dans le dossier backend !"
+            exit 1
+          fi
+
+      - name: Lancer l'API sur Render
         uses: jorgeLNJunior/render-deploy@v1.4.4
         with:
           service_id: ${{ secrets.RENDER_SERVICE_ID }}
