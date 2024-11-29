@@ -1,4 +1,4 @@
-web: python frontend/dashboard.py
+web: python dashboard.py
 
 
 

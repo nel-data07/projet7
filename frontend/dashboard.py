@@ -8,7 +8,7 @@ st.cache_data.clear()
 st.cache_resource.clear()
 
 # Récupérer l'URL de l'API depuis une variable d'environnement
-API_URL = "https://projet7-gszq.onrender.com/predict"
+API_URL = "https://projet7-1.onrender.com/predict"
 
 
 st.header("Test de l'API")

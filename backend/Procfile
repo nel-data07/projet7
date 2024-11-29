@@ -1,4 +1,4 @@
-web: python backend/app.py
+web: python app.py
 
 
 
