@@ -45,10 +45,12 @@ data = [{
 
 if st.button("Envoyer les données à l'API"):
     try:
-        response = requests.post(API_URL, json=data)
+        response = requests.post(f"{API_URL}/predict", json=data)
         if response.status_code == 200:
             predictions = response.json().get("predictions", [])
             prob = predictions[0]
+            
+            # Affichage de la probabilité
             st.success(f"Probabilité de non-remboursement : {prob:.2f}")
             
             # Indiquer si le crédit est accepté ou refusé
