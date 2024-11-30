@@ -1,4 +1,4 @@
-name: Déploiement de l'API
+name: Déploiement API et Frontend
 
 on:
   push:
@@ -32,29 +32,20 @@ jobs:
             echo "Fichier best_model_lgb_bal.pkl introuvable dans le dossier backend !"
             exit 1
           fi
-          if [ ! -f backend/selected_features.txt ]; then
-            echo "Fichier selected_features.txt introuvable dans le dossier backend !"
-            exit 1
-          fi
 
-      - name: Nettoyer le cache Render
-        run: |
-          curl -X POST \
-            -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" \
-            -H "Content-Type: application/json" \
-            https://api.render.com/v1/services/${{ secrets.RENDER_BACKEND_SERVICE_ID }}/clear_cache
-
+      # Déploiement du backend
       - name: Lancer le Backend sur Render
         uses: jorgeLNJunior/render-deploy@v1.4.4
         with:
           service_id: ${{ secrets.RENDER_BACKEND_SERVICE_ID }}
           api_key: ${{ secrets.RENDER_API_KEY }}
-          wait_deploy: true  # Attend la fin du déploiement avant de passer à l'étape suivante
+          wait_deploy: true
 
+      # Déploiement du frontend
       - name: Lancer le Frontend sur Render
         uses: jorgeLNJunior/render-deploy@v1.4.4
         with:
           service_id: ${{ secrets.RENDER_FRONTEND_SERVICE_ID }}
           api_key: ${{ secrets.RENDER_API_KEY }}
-          wait_deploy: true  # Attend la fin du déploiement avant de passer à l'étape suivante
+          wait_deploy: true
 
