@@ -12,9 +12,9 @@ CORS(app)
 # Activer les logs
 logging.basicConfig(level=logging.INFO)
 
-# Chemins vers le modèle et les colonnes
-MODEL_PATH = "best_model_lgb_bal.pkl"
-FEATURES_PATH = "selected_features.txt"
+# Chemin absolu vers le fichier modèle
+MODEL_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "best_model_lgb_bal.pkl"))
+FEATURES_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "selected_features.txt"))
 
 # Vérification des chemins
 if not os.path.exists(MODEL_PATH):
@@ -67,6 +67,12 @@ def predict():
             if col not in df.columns:
                 logging.warning(f"Colonne manquante ajoutée : {col} avec la valeur par défaut {default_values[col]}")
                 df[col] = default_values[col]
+            else:
+                # Remplacer les valeurs nulles par les valeurs par défaut
+                df[col] = df[col].fillna(default_values[col])
+
+        # S'assurer que les types des colonnes sont corrects
+        df = df.astype({col: float for col in required_columns})
 
         # Filtrer uniquement les colonnes nécessaires pour le modèle
         df = df[required_columns]

@@ -1,10 +1,12 @@
 import pytest
 import joblib
 from flask import json
+import sys
 import os
 
-# Définir le chemin absolu vers le dossier backend et les fichiers nécessaires
-BACKEND_PATH = "/Users/Nelly/Desktop/projet7/backend"
+# Chemins absolus
+PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
+BACKEND_PATH = os.path.abspath(os.path.join(PROJECT_ROOT, "../backend"))
 MODEL_PATH = os.path.join(BACKEND_PATH, "best_model_lgb_bal.pkl")
 FEATURES_PATH = os.path.join(BACKEND_PATH, "selected_features.txt")
 
