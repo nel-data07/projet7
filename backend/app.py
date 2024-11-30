@@ -5,7 +5,10 @@ import joblib
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import time  # Pour mesurer le temps d'exécution
+import warnings
 
+# Ignorer les warnings
+warnings.filterwarnings("ignore")
 app = Flask(__name__)
 CORS(app)
 
