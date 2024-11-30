@@ -85,6 +85,7 @@ def predict_client():
 
         # Récupérer les données du client
         client_data = clients_data[clients_data["SK_ID_CURR"] == sk_id_curr].iloc[:, 1:]  # Supprime SK_ID_CURR
+        client_data = client_data.reset_index(drop=True)  # Réinitialiser l'index
 
         # Prédiction et valeurs SHAP
         prediction = model.predict_proba(client_data)[:, 1][0]
@@ -129,6 +130,7 @@ def predict():
 
         # Filtrer uniquement les colonnes nécessaires pour le modèle
         df = df[required_columns]
+        df = df.reset_index(drop=True)  # Réinitialiser l'index
 
         # Prédiction
         predict_start_time = time.time()
@@ -139,6 +141,7 @@ def predict():
         if "SK_ID_CURR" in df.columns:
             global clients_data
             clients_data = pd.concat([clients_data, df], ignore_index=True).drop_duplicates("SK_ID_CURR")
+            clients_data = clients_data.reset_index(drop=True)  # Réinitialiser l'index
             clients_data.to_csv(CLIENTS_DATA_PATH, index=False)
 
         # Retourner les résultats
