@@ -30,6 +30,6 @@ print(df.isnull().sum())
 
 # Enregistrer les données prétraitées
 processed_file_path = "/Users/Nelly/Desktop/projet7/application_train_processed.csv"
-df.to_csv(processed_file_path, index=False)
+df.to_csv(processed_file_path, index=True)
 print(f"Données prétraitées enregistrées dans : {processed_file_path}")
 
