@@ -1,4 +1,4 @@
-name: Déploiement de l'API et du Frontend
+name: Déploiement de l'API
 
 on:
   push:
@@ -36,6 +36,13 @@ jobs:
             echo "Fichier selected_features.txt introuvable dans le dossier backend !"
             exit 1
           fi
+
+      - name: Nettoyer le cache Render
+        run: |
+          curl -X POST \
+            -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" \
+            -H "Content-Type: application/json" \
+            https://api.render.com/v1/services/${{ secrets.RENDER_BACKEND_SERVICE_ID }}/clear_cache
 
       - name: Lancer le Backend sur Render
         uses: jorgeLNJunior/render-deploy@v1.4.4
