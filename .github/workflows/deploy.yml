@@ -28,8 +28,8 @@ jobs:
 
       - name: Assurer que les fichiers backend sont présents
         run: |
-          if [ ! -f backend/lightgbm_model.txt ]; then
-            echo "Fichier lightgbm_model.txt introuvable dans le dossier backend !"
+          if [ ! -f backend/best_model_lgb_bal.pkl ]; then
+            echo "Fichier best_model_lgb_bal.pkl introuvable dans le dossier backend !"
             exit 1
           fi
 
