@@ -1,7 +1,7 @@
 import os
 import logging
 import pandas as pd
-import lightgbm as lgb
+import joblib
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import time  # Pour mesurer le temps d'exécution
@@ -12,8 +12,8 @@ CORS(app)
 # Activer les logs
 logging.basicConfig(level=logging.INFO)
 
-# Charger le modèle
-MODEL_PATH = "lightgbm_model.txt"
+# Chemins vers le modèle et les colonnes
+MODEL_PATH = "best_model_lgb_bal.pkl"
 FEATURES_PATH = "selected_features.txt"
 
 # Vérification des chemins
@@ -25,9 +25,9 @@ if not os.path.exists(FEATURES_PATH):
     logging.error(f"Fichier des colonnes introuvable : {FEATURES_PATH}")
     raise FileNotFoundError(f"Fichier des colonnes introuvable : {FEATURES_PATH}")
 
-# Charger le modèle
+# Charger le modèle au format .pkl
 start_time = time.time()
-model = lgb.Booster(model_file=MODEL_PATH)
+model = joblib.load(MODEL_PATH)
 logging.info(f"Modèle chargé en {time.time() - start_time:.2f} secondes.")
 
 # Charger les colonnes utilisées pour l'entraînement
@@ -73,7 +73,7 @@ def predict():
 
         # Prédiction
         predict_start_time = time.time()
-        predictions = model.predict(df)
+        predictions = model.predict_proba(df)[:, 1]  # Prédictions avec probabilités pour la classe positive
         logging.info(f"Prédiction effectuée en {time.time() - predict_start_time:.2f} secondes.")
 
         # Retourner les résultats

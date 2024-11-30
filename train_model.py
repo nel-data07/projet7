@@ -1,5 +1,6 @@
 import pandas as pd
 import lightgbm as lgb
+import joblib
 import os
 
 # Chemin vers les données prétraitées
@@ -24,16 +25,15 @@ print("Entraînement du modèle...")
 model = lgb.LGBMClassifier()
 model.fit(X, y)
 
-# Sauvegarder le modèle entraîné
-print("Sauvegarde du modèle...")
-MODEL_PATH = os.path.join("models", "lightgbm_model.txt")
-os.makedirs("models", exist_ok=True)
-model.booster_.save_model(MODEL_PATH)
+# Sauvegarder le modèle entraîné au format .pkl à la racine
+print("Sauvegarde du modèle au format .pkl...")
+MODEL_PATH = "best_model_lgb_bal.pkl"
+joblib.dump(model, MODEL_PATH)
 
 # Sauvegarder les colonnes utilisées pour l'entraînement
 print("Sauvegarde des colonnes sélectionnées...")
-FEATURES_PATH = os.path.join("models", "selected_features.txt")
+FEATURES_PATH = "selected_features.txt"
 with open(FEATURES_PATH, "w") as f:
     f.write(",".join(selected_features))
 
-print("Modèle et colonnes sauvegardés avec succès !")
+print("Modèle et colonnes sauvegardés avec succès à la racine du dossier !")
