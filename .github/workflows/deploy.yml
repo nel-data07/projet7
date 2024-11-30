@@ -1,4 +1,4 @@
-name: Déploiement de l'API
+name: Déploiement de l'API et du Frontend
 
 on:
   push:
@@ -32,11 +32,22 @@ jobs:
             echo "Fichier best_model_lgb_bal.pkl introuvable dans le dossier backend !"
             exit 1
           fi
+          if [ ! -f backend/selected_features.txt ]; then
+            echo "Fichier selected_features.txt introuvable dans le dossier backend !"
+            exit 1
+          fi
 
-      - name: Lancer l'API sur Render
+      - name: Lancer le Backend sur Render
         uses: jorgeLNJunior/render-deploy@v1.4.4
         with:
-          service_id: ${{ secrets.RENDER_SERVICE_ID }}
+          service_id: ${{ secrets.RENDER_BACKEND_SERVICE_ID }}
+          api_key: ${{ secrets.RENDER_API_KEY }}
+          wait_deploy: true  # Attend la fin du déploiement avant de passer à l'étape suivante
+
+      - name: Lancer le Frontend sur Render
+        uses: jorgeLNJunior/render-deploy@v1.4.4
+        with:
+          service_id: ${{ secrets.RENDER_FRONTEND_SERVICE_ID }}
           api_key: ${{ secrets.RENDER_API_KEY }}
           wait_deploy: true  # Attend la fin du déploiement avant de passer à l'étape suivante
 
