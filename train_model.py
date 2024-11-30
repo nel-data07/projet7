@@ -12,7 +12,7 @@ df = pd.read_csv(DATA_PATH)
 
 # Définir les features et la cible
 selected_features = ["CODE_GENDER", "FLAG_OWN_CAR", "CNT_CHILDREN", "AMT_INCOME_TOTAL",
-                     "AMT_CREDIT", "AMT_ANNUITY", "AMT_GOODS_PRICE"]
+                     "AMT_CREDIT", "AMT_ANNUITY", "AMT_GOODS_PRICE","SK_ID_CURR"]
 X = df[selected_features]
 y = df["TARGET"]
 
