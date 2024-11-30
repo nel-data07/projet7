@@ -17,10 +17,10 @@ CORS(app)
 # Activer les logs
 logging.basicConfig(level=logging.INFO)
 
-# Chemin absolu vers le fichier modèle
+# Chemin absolu vers les fichiers nécessaires
 MODEL_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "best_model_lgb_bal.pkl"))
 FEATURES_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "selected_features.txt"))
-CLIENTS_DATA_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "clients_data.csv"))  # Exemple de fichier client
+CLIENTS_DATA_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "clients_data.csv"))
 
 # Vérification des chemins
 if not os.path.exists(MODEL_PATH):
@@ -45,7 +45,8 @@ default_values = {col: 0.0 for col in required_columns}
 
 # Charger les données clients
 if os.path.exists(CLIENTS_DATA_PATH):
-    clients_data = pd.read_csv(CLIENTS_DATA_PATH)
+    clients_data = pd.read_csv(CLIENTS_DATA_PATH, delimiter=",")
+    clients_data["SK_ID_CURR"] = clients_data["SK_ID_CURR"].astype(int)  # S'assurer que SK_ID_CURR est un entier
 else:
     clients_data = pd.DataFrame(columns=["SK_ID_CURR"] + required_columns)
 
@@ -61,7 +62,7 @@ def index():
 @app.route('/get_client_ids', methods=['GET'])
 def get_client_ids():
     """Obtenir la liste des IDs clients existants."""
-    ids = clients_data["SK_ID_CURR"].tolist()
+    ids = clients_data["SK_ID_CURR"].astype(int).tolist()  # Convertir en entier si nécessaire avant de convertir en liste
     return jsonify({"client_ids": ids}), 200
 
 @app.route('/get_next_client_id', methods=['GET'])
@@ -78,7 +79,7 @@ def predict_client():
     """Obtenir les prédictions et valeurs SHAP pour un client existant."""
     try:
         data = request.get_json()
-        sk_id_curr = data.get("SK_ID_CURR")
+        sk_id_curr = int(data.get("SK_ID_CURR"))  # Convertir l'ID client en entier
 
         if sk_id_curr not in clients_data["SK_ID_CURR"].values:
             return jsonify({"error": f"Client avec ID {sk_id_curr} introuvable."}), 404
@@ -86,6 +87,9 @@ def predict_client():
         # Récupérer les données du client
         client_data = clients_data[clients_data["SK_ID_CURR"] == sk_id_curr].iloc[:, 1:]  # Supprime SK_ID_CURR
         client_data = client_data.reset_index(drop=True)  # Réinitialiser l'index
+
+        # S'assurer que les colonnes correspondent aux features du modèle
+        client_data = client_data[required_columns]  # Exclut automatiquement SK_ID_CURR
 
         # Prédiction et valeurs SHAP
         prediction = model.predict_proba(client_data)[:, 1][0]
@@ -150,7 +154,7 @@ def predict():
         return jsonify({'predictions': predictions.tolist()})
     except Exception as e:
         logging.error(f"Erreur lors de la prédiction : {e}")
-        return jsonify({'error': str(e)}), 500
+        return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=int(os.environ.get("PORT", 5000)))

@@ -59,9 +59,10 @@ def test_home(client):
     assert json_data["status"] == "success"
 
 def test_predict_valid(client):
-    """Test de la prédiction avec des données valides."""
+    """Test de la prédiction avec des données valides incluant SK_ID_CURR."""
     data = [
         {
+            "SK_ID_CURR": 100001,
             "CODE_GENDER": 1,
             "FLAG_OWN_CAR": 0,
             "CNT_CHILDREN": 2,
@@ -79,7 +80,7 @@ def test_predict_valid(client):
 
 def test_predict_missing_columns(client):
     """Test de la prédiction avec des colonnes manquantes."""
-    data = [{"CODE_GENDER": 1}]
+    data = [{"SK_ID_CURR": 100002, "CODE_GENDER": 1}]
     response = client.post('/predict', json=data)
     assert response.status_code == 200
     response_json = response.get_json()
@@ -94,9 +95,10 @@ def test_predict_empty_request(client):
     assert "error" in response_json, "Un message d'erreur devrait être retourné pour une requête vide."
 
 def test_predict_null_values(client):
-    """Test de la prédiction avec des valeurs nulles."""
+    """Test de la prédiction avec des valeurs nulles incluant SK_ID_CURR."""
     data = [
         {
+            "SK_ID_CURR": 100003,
             "CODE_GENDER": None,
             "FLAG_OWN_CAR": 0,
             "CNT_CHILDREN": None,
