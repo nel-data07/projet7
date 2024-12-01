@@ -104,59 +104,63 @@ def get_next_client_id():
         logging.error(f"Erreur lors de la récupération du prochain ID client : {e}")
         return jsonify({"error": str(e)}), 500
 
-
 @app.route('/predict_client', methods=['POST'])
 def predict_client():
-    """Obtenir les prédictions et valeurs SHAP pour un client existant."""
+    """Obtenir les prédictions et valeurs SHAP pour un client existant ou nouveau."""
     try:
+        # Récupérer les données envoyées
         data = request.get_json()
-        sk_id_curr = int(data.get("SK_ID_CURR"))  # Convertir l'ID client en entier
-        logging.info(f"Vérification de SK_ID_CURR : {sk_id_curr}")
-        logging.info(f"Colonnes disponibles dans clients_data : {clients_data.columns.tolist()}")
+        logging.info(f"Données reçues pour prédiction : {data}")
 
-        # Vérification de l'existence de l'ID client
-        if sk_id_curr not in clients_data["SK_ID_CURR"].values:
-            return jsonify({"error": f"Client avec ID {sk_id_curr} introuvable."}), 404
-
-        # Récupérer les données du client
-        client_data = clients_data[clients_data["SK_ID_CURR"] == sk_id_curr]
-        logging.info(f"Données récupérées pour SK_ID_CURR={sk_id_curr} :\n{client_data}")
-
-        client_data = client_data.reset_index(drop=True)
+        # Vérifier si le client existe dans clients_data
+        sk_id_curr = int(data.get("SK_ID_CURR"))
+        if sk_id_curr in clients_data["SK_ID_CURR"].values:
+            # Client existant : récupérer ses données
+            client_data = clients_data[clients_data["SK_ID_CURR"] == sk_id_curr]
+            logging.info(f"Données récupérées pour le client existant : {client_data}")
+        else:
+            # Client nouveau : utiliser les données reçues
+            logging.info(f"Nouveau client détecté : {data}")
+            client_data = pd.DataFrame([data])
 
         # Vérifier que toutes les colonnes nécessaires sont présentes
         missing_columns = [col for col in required_columns if col not in client_data.columns]
         if missing_columns:
-            logging.error(f"Colonnes manquantes dans client_data : {missing_columns}")
+            logging.error(f"Colonnes manquantes : {missing_columns}")
             return jsonify({"error": f"Colonnes manquantes : {missing_columns}"}), 400
 
-        # Créer un DataFrame sans 'SK_ID_CURR' pour la prédiction
+        # Compléter les colonnes manquantes avec des valeurs par défaut
+        for col in required_columns:
+            if col not in client_data.columns:
+                client_data[col] = default_values[col]
+
+        # Retirer 'SK_ID_CURR' avant d'envoyer les données au modèle
         data_for_prediction = client_data.drop(columns=['SK_ID_CURR'], errors='ignore')
+        logging.info(f"Données prêtes pour la prédiction : {data_for_prediction}")
 
-        # Filtrer uniquement les colonnes nécessaires
-        data_for_prediction = data_for_prediction[required_columns]
-        logging.info(f"Données finales envoyées au modèle :\n{data_for_prediction}")
-
-        # Prédiction et valeurs SHAP
+        # Prédiction avec le modèle
         predictions = model.predict_proba(data_for_prediction)
-        logging.info(f"Probabilités prédites par le modèle : {predictions}")
+        logging.info(f"Résultat des prédictions : {predictions}")
 
+        # Calcul des valeurs SHAP
         explainer = shap.TreeExplainer(model)
         shap_values = explainer.shap_values(data_for_prediction)
 
-        # Gestion des classes multiples pour les SHAP values
+        # Gestion des SHAP values pour plusieurs classes
         if len(shap_values) > 1:
-            shap_values = shap_values[1]  # SHAP values pour la classe 1
+            shap_values = shap_values[1]  # SHAP values pour la classe positive
         else:
             shap_values = shap_values[0]
 
+        # Retourner la réponse
         return jsonify({
             "prediction": predictions[0][1],  # Probabilité pour la classe positive
             "shap_values": shap_values.tolist(),
             "feature_names": required_columns
         }), 200
+
     except Exception as e:
-        logging.error(f"Erreur lors de la prédiction pour le client : {e}")
+        logging.error(f"Erreur lors de la prédiction : {e}")
         return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
