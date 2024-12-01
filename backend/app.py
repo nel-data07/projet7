@@ -11,8 +11,10 @@ import shap
 # Ignorer les warnings
 warnings.filterwarnings("ignore")
 
-app = Flask(__name__)
-CORS(app)
+# Initialiser une application Flask uniquement si elle n'existe pas déjà
+if "app" not in globals():
+    app = Flask(__name__)
+    CORS(app)
 
 # Activer les logs
 logging.basicConfig(level=logging.INFO)
