@@ -12,7 +12,7 @@ df = pd.read_csv(DATA_PATH)
 
 # Définir les features et la cible
 selected_features = ["CODE_GENDER", "FLAG_OWN_CAR", "CNT_CHILDREN", "AMT_INCOME_TOTAL",
-                     "AMT_CREDIT", "AMT_ANNUITY", "AMT_GOODS_PRICE", "SK_ID_CURR"]
+                     "AMT_CREDIT", "AMT_ANNUITY", "AMT_GOODS_PRICE"]  # Exclure SK_ID_CURR
 X = df[selected_features]
 y = df["TARGET"]
 
@@ -36,10 +36,10 @@ FEATURES_PATH = "selected_features.txt"
 with open(FEATURES_PATH, "w") as f:
     f.write(",".join(selected_features))
 
-# Créer un DataFrame client avec les features nécessaires (sans la colonne TARGET)
-print("Sauvegarde des données clients (sans colonne TARGET)...")
+# Créer un DataFrame client avec les features nécessaires (ajouter SK_ID_CURR pour référence)
+print("Sauvegarde des données clients (avec SK_ID_CURR, sans colonne TARGET)...")
 CLIENTS_DATA_PATH = "clients_data.csv"
-clients_data = X.copy()  # Copier les features uniquement
-clients_data.to_csv(CLIENTS_DATA_PATH, index=False)  # Sauvegarder au format CSV
+clients_data = df[["SK_ID_CURR"] + selected_features]  # Inclure SK_ID_CURR mais pas TARGET
+clients_data.to_csv(CLIENTS_DATA_PATH, index=True)  # Sauvegarder au format CSV
 
-print("Modèle, features et données clients (sans TARGET) sauvegardés avec succès !")
+print("Modèle, features et données clients (avec SK_ID_CURR, sans TARGET) sauvegardés avec succès !")

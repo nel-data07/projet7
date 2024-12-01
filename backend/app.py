@@ -129,16 +129,19 @@ def predict_client():
             logging.error(f"Colonnes manquantes dans client_data : {missing_columns}")
             return jsonify({"error": f"Colonnes manquantes : {missing_columns}"}), 400
 
+        # Créer un DataFrame sans 'SK_ID_CURR' pour la prédiction
+        data_for_prediction = client_data.drop(columns=['SK_ID_CURR'], errors='ignore')
+
         # Filtrer uniquement les colonnes nécessaires
-        client_data = client_data[required_columns]
-        logging.info(f"Données finales envoyées au modèle :\n{client_data}")
+        data_for_prediction = data_for_prediction[required_columns]
+        logging.info(f"Données finales envoyées au modèle :\n{data_for_prediction}")
 
         # Prédiction et valeurs SHAP
-        predictions = model.predict_proba(client_data)
+        predictions = model.predict_proba(data_for_prediction)
         logging.info(f"Probabilités prédites par le modèle : {predictions}")
 
         explainer = shap.TreeExplainer(model)
-        shap_values = explainer.shap_values(client_data)
+        shap_values = explainer.shap_values(data_for_prediction)
 
         # Gestion des classes multiples pour les SHAP values
         if len(shap_values) > 1:
