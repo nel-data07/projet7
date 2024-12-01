@@ -87,6 +87,23 @@ def get_client_ids():
         logging.error(f"Erreur lors de la récupération des clients : {e}")
         return jsonify({"error": str(e)}), 500
 
+@app.route('/get_next_client_id', methods=['GET'])
+def get_next_client_id():
+    """Retourne le prochain ID client disponible."""
+    try:
+        if clients_data.empty:
+            logging.warning("Les données clients sont vides.")
+            return jsonify({"error": "Aucun client trouvé."}), 404
+        
+        # Calculer le prochain ID client
+        max_id = clients_data["SK_ID_CURR"].max()
+        next_id = max_id + 1 if not pd.isnull(max_id) else 100001  # Valeur par défaut si aucune donnée
+        logging.info(f"Prochain ID client généré : {next_id}")
+        return jsonify({"next_id": next_id}), 200
+    except Exception as e:
+        logging.error(f"Erreur lors de la récupération du prochain ID client : {e}")
+        return jsonify({"error": str(e)}), 500
+
 @app.route('/predict_client', methods=['POST'])
 def predict_client():
     """Obtenir les prédictions et valeurs SHAP pour un client existant."""
