@@ -97,12 +97,13 @@ def get_next_client_id():
         
         # Calculer le prochain ID client
         max_id = clients_data["SK_ID_CURR"].max()
-        next_id = max_id + 1 if not pd.isnull(max_id) else 100001  # Valeur par défaut si aucune donnée
+        next_id = int(max_id + 1) if not pd.isnull(max_id) else 100001  # Conversion explicite en int natif
         logging.info(f"Prochain ID client généré : {next_id}")
-        return jsonify({"next_id": next_id}), 200
+        return jsonify({"next_id": int(next_id)})  # S'assurer que next_id est de type natif
     except Exception as e:
         logging.error(f"Erreur lors de la récupération du prochain ID client : {e}")
         return jsonify({"error": str(e)}), 500
+
 
 @app.route('/predict_client', methods=['POST'])
 def predict_client():
