@@ -92,6 +92,7 @@ elif menu == "Créer Nouveau Client":
 
     # ID auto-incrémenté
     try:
+        # Appel de l'API pour récupérer le prochain ID client
         response = requests.get(f"{API_URL}/get_next_client_id")
         if response.status_code == 200:
             next_id = response.json().get("next_id", None)
@@ -102,6 +103,7 @@ elif menu == "Créer Nouveau Client":
         st.error(f"Erreur lors de la récupération du prochain ID client : {e}")
         next_id = "Inconnu"
 
+    # Affichage de l'ID auto-généré
     st.write(f"ID client auto-généré : **{next_id}**")
 
     # Formulaire pour saisir les données
