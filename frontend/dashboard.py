@@ -16,16 +16,31 @@ st.set_page_config(
     layout="wide"
 )
 
+# Description introductive
+st.write(
+    """
+    # Bienvenue dans l'outil de simulation de risque de crédit
+    Cet outil permet d'estimer la probabilité de non-remboursement d'un crédit en fonction des informations du client.
+    
+    ### Fonctionnalités :
+    - **Clients existants** : Sélectionnez un ID client pour visualiser les prédictions associées.
+    - **Nouveaux clients** : Remplissez les informations nécessaires pour simuler une nouvelle demande de crédit.
+    
+    ### Définitions :
+    - **Montant de l'annuité** : Montant annuel remboursé (capital + intérêts).  
+    - **Prix des biens** : Montant total des biens financés avec le crédit.
+    """
+)
+
 # Menu de navigation
 menu = st.sidebar.selectbox("Menu", ["Prédictions Client Existant", "Créer Nouveau Client"])
 
-# Page 1 : Prédictions pour un client existant
+# **Page 1 : Prédictions pour un client existant**
 if menu == "Prédictions Client Existant":
     st.title("Simulation de Risque de Crédit - Client Existant")
     
     # Charger les IDs clients
     try:
-        # Exemple d'appel pour récupérer les IDs clients existants (remplacez par votre endpoint API si disponible)
         response = requests.get(f"{API_URL}/get_client_ids")
         if response.status_code == 200:
             client_ids = response.json().get("client_ids", [])
@@ -40,8 +55,8 @@ if menu == "Prédictions Client Existant":
     if client_ids:
         selected_id = st.selectbox("Choisissez un ID client (SK_ID_CURR)", client_ids)
         if st.button("Prédire"):
-            # Envoyer une requête à l'API pour obtenir les prédictions et les valeurs SHAP
             try:
+                # Envoyer uniquement l'ID client au backend
                 response = requests.post(f"{API_URL}/predict_client", json={"SK_ID_CURR": selected_id})
                 if response.status_code == 200:
                     data = response.json()
@@ -65,13 +80,13 @@ if menu == "Prédictions Client Existant":
                         st.warning("Valeurs SHAP indisponibles.")
                 else:
                     st.error(f"Erreur API : {response.status_code}")
-                    st.write(response.text)
+                    st.write(response.json())
             except Exception as e:
                 st.error(f"Erreur lors de l'appel API : {e}")
     else:
         st.warning("Aucun ID client disponible.")
 
-# Page 2 : Créer un nouveau client et obtenir une prédiction
+# **Page 2 : Créer un nouveau client et obtenir une prédiction**
 elif menu == "Créer Nouveau Client":
     st.title("Simulation de Risque de Crédit - Nouveau Client")
 
@@ -100,7 +115,7 @@ elif menu == "Créer Nouveau Client":
     AMT_GOODS_PRICE = st.number_input("Prix des biens (€)", min_value=0, value=0)
 
     # Préparer les données pour l'API
-    data = [{
+    data = {
         "SK_ID_CURR": next_id,
         "CODE_GENDER": CODE_GENDER,
         "FLAG_OWN_CAR": FLAG_OWN_CAR,
@@ -109,25 +124,33 @@ elif menu == "Créer Nouveau Client":
         "AMT_CREDIT": AMT_CREDIT,
         "AMT_ANNUITY": AMT_ANNUITY,
         "AMT_GOODS_PRICE": AMT_GOODS_PRICE
-    }]
+    }
 
     if st.button("Valider"):
         try:
             response = requests.post(f"{API_URL}/predict_client", json=data)
             if response.status_code == 200:
-                predictions = response.json().get("predictions", [])
-                prob = predictions[0]
+                data = response.json()
+                prediction = data.get("prediction", None)
+                shap_values = data.get("shap_values", None)
+                feature_names = data.get("feature_names", None)
 
-                # Affichage de la probabilité
-                st.success(f"Probabilité de non-remboursement : {prob:.2f}")
+                # Afficher la prédiction
+                if prediction is not None:
+                    if prediction > 0.5:
+                        st.error(f"Résultat : Crédit REFUSÉ (Risque élevé - {prediction:.2f})")
+                    else:
+                        st.success(f"Résultat : Crédit ACCEPTÉ (Risque faible - {prediction:.2f})")
 
-                # Indique si le crédit est accepté ou refusé
-                if prob > 0.5:
-                    st.error("Résultat : Crédit REFUSÉ (Risque élevé)")
+                # Afficher les valeurs SHAP si disponibles
+                if shap_values and feature_names:
+                    st.subheader("Facteurs influençant la décision du modèle")
+                    shap_df = pd.DataFrame({"Feature": feature_names, "SHAP Value": shap_values})
+                    st.bar_chart(shap_df.set_index("Feature"))
                 else:
-                    st.success("Résultat : Crédit ACCEPTÉ (Risque faible)")
+                    st.warning("Valeurs SHAP indisponibles.")
             else:
                 st.error(f"Erreur API : {response.status_code}")
-                st.write(response.text)
+                st.write(response.json())
         except Exception as e:
             st.error(f"Erreur lors de l'appel API : {e}")

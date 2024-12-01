@@ -112,14 +112,20 @@ def predict_client():
         data = request.get_json()
         logging.info(f"Données reçues pour prédiction : {data}")
 
-        # Vérifier si le client existe dans clients_data
+        # Vérifier si l'ID client est fourni
+        if "SK_ID_CURR" not in data:
+            logging.error("SK_ID_CURR manquant dans les données reçues.")
+            return jsonify({"error": "SK_ID_CURR est obligatoire."}), 400
+
         sk_id_curr = int(data.get("SK_ID_CURR"))
+
+        # Vérifier si le client existe dans clients_data
         if sk_id_curr in clients_data["SK_ID_CURR"].values:
-            # Client existant : récupérer ses données
+            # Client existant : récupérer ses données depuis le fichier
             client_data = clients_data[clients_data["SK_ID_CURR"] == sk_id_curr]
             logging.info(f"Données récupérées pour le client existant : {client_data}")
         else:
-            # Client nouveau : utiliser les données reçues
+            # Client nouveau : utiliser les données envoyées
             logging.info(f"Nouveau client détecté : {data}")
             client_data = pd.DataFrame([data])
 
@@ -134,9 +140,10 @@ def predict_client():
             if col not in client_data.columns:
                 client_data[col] = default_values[col]
 
-        # Retirer 'SK_ID_CURR' avant d'envoyer les données au modèle
-        data_for_prediction = client_data.drop(columns=['SK_ID_CURR'], errors='ignore')
-        logging.info(f"Données prêtes pour la prédiction : {data_for_prediction}")
+        # Préparer les données pour la prédiction
+        # Supprimer SK_ID_CURR avant d'envoyer au modèle, car il n'est pas nécessaire pour la prédiction
+        data_for_prediction = client_data[required_columns]
+        logging.info(f"Données prêtes pour la prédiction :\n{data_for_prediction}")
 
         # Prédiction avec le modèle
         predictions = model.predict_proba(data_for_prediction)
