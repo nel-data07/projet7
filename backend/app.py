@@ -73,6 +73,20 @@ def index():
         "routes": ["/", "/predict", "/get_client_ids", "/get_next_client_id", "/predict_client"]
     }), 200
 
+@app.route('/get_client_ids', methods=['GET'])
+def get_client_ids():
+    """Retourne les IDs des clients existants."""
+    try:
+        if clients_data.empty:
+            logging.warning("Les données clients sont vides.")
+            return jsonify({"error": "Aucun client trouvé."}), 404
+        client_ids = clients_data["SK_ID_CURR"].tolist()
+        logging.info(f"Clients trouvés : {client_ids}")
+        return jsonify({"client_ids": client_ids}), 200
+    except Exception as e:
+        logging.error(f"Erreur lors de la récupération des clients : {e}")
+        return jsonify({"error": str(e)}), 500
+
 @app.route('/predict_client', methods=['POST'])
 def predict_client():
     """Obtenir les prédictions et valeurs SHAP pour un client existant."""
