@@ -90,32 +90,18 @@ if menu == "Prédictions Client Existant":
 elif menu == "Créer Nouveau Client":
     st.title("Simulation de Risque de Crédit - Nouveau Client")
 
-    # Ajouter un bouton pour forcer la mise à jour de l'ID
-    if "force_refresh" not in st.session_state:
-        st.session_state["force_refresh"] = True
-
-    if st.button("Générer un nouvel ID", key="refresh_id"):
-        st.session_state["force_refresh"] = True
-
     # ID auto-incrémenté
-    if st.session_state["force_refresh"]:
-        try:
-            # Appel de l'API pour récupérer le prochain ID client
-            response = requests.get(f"{API_URL}/get_next_client_id")
-            if response.status_code == 200:
-                next_id = response.json().get("next_id", None)
-                st.session_state["next_id"] = next_id  # Stocker dans l'état de session
-                st.session_state["force_refresh"] = False
-            else:
-                st.error(f"Erreur lors de la récupération du prochain ID client : {response.status_code}")
-                next_id = "Inconnu"
-        except Exception as e:
-            st.error(f"Erreur lors de la récupération du prochain ID client : {e}")
+    try:
+        response = requests.get(f"{API_URL}/get_next_client_id")
+        if response.status_code == 200:
+            next_id = response.json().get("next_id", None)
+        else:
+            st.error(f"Erreur lors de la récupération du prochain ID client : {response.status_code}")
             next_id = "Inconnu"
-    else:
-        next_id = st.session_state.get("next_id", "Inconnu")
+    except Exception as e:
+        st.error(f"Erreur lors de la récupération du prochain ID client : {e}")
+        next_id = "Inconnu"
 
-    # Affichage de l'ID auto-généré
     st.write(f"ID client auto-généré : **{next_id}**")
 
     # Formulaire pour saisir les données
