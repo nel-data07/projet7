@@ -111,9 +111,9 @@ elif menu == "Créer Nouveau Client":
         "AMT_GOODS_PRICE": AMT_GOODS_PRICE
     }]
 
-    if st.button("Envoyer les données à l'API"):
+    if st.button("Valider"):
         try:
-            response = requests.post(f"{API_URL}/predict", json=data)
+            response = requests.post(f"{API_URL}/predict_client", json=data)
             if response.status_code == 200:
                 predictions = response.json().get("predictions", [])
                 prob = predictions[0]
