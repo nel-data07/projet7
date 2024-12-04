@@ -128,7 +128,7 @@ elif menu == "Créer Nouveau Client":
 
     if st.button("Valider"):
     # Utilisation du seuil optimal pour la décision
-optimal_threshold = 0.09  # Seuil optimal déterminé lors de l'entraînement
+    optimal_threshold = 0.09  # Seuil optimal déterminé lors de l'entraînement
 
 try:
     response = requests.post(f"{API_URL}/predict_client", json=data)
