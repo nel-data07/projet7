@@ -68,8 +68,6 @@ if menu == "Prédictions Client Existant":
                     if prediction is not None:
                         # Utilisation du seuil optimal pour la décision
                         optimal_threshold = 0.09
-                        st.write(f"Seuil utilisé pour la décision : {optimal_threshold}")
-                        st.write(f"Valeur de la prédiction : {prediction}")
 
                         if prediction > optimal_threshold:
                             st.error(f"Résultat : Crédit REFUSÉ (Risque élevé - {prediction:.2f})")
@@ -135,7 +133,6 @@ elif menu == "Créer Nouveau Client":
     if st.button("Valider"):
         # Utilisation du seuil optimal pour la décision
         optimal_threshold = 0.09
-        st.write(f"Seuil utilisé pour la décision : {optimal_threshold}")
 
         try:
             response = requests.post(f"{API_URL}/predict_client", json=data)
@@ -147,7 +144,6 @@ elif menu == "Créer Nouveau Client":
 
                 # Afficher la prédiction
                 if prediction is not None:
-                    st.write(f"Valeur de la prédiction : {prediction}")
                     if prediction > optimal_threshold:
                         st.error(f"Résultat : Crédit REFUSÉ (Risque élevé - {prediction:.2f})")
                     else:
