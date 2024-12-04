@@ -127,34 +127,41 @@ elif menu == "Créer Nouveau Client":
     }
 
 # Bouton "Valider" pour soumettre les informations
-    if st.button("Valider"):
-        # Utilisation du seuil optimal pour la décision
-        optimal_threshold = 0.09  # Seuil optimal déterminé lors de l'entraînement
+if st.button("Valider"):
+    # Utilisation du seuil optimal pour la décision
+    optimal_threshold = 0.09  # Seuil optimal déterminé lors de l'entraînement
 
-        try:
-            response = requests.post(f"{API_URL}/predict_client", json=data)
-            if response.status_code == 200:
-                data = response.json()
-                prediction = data.get("prediction", None)
-                shap_values = data.get("shap_values", None)
-                feature_names = data.get("feature_names", None)
+    # Afficher le seuil dans l'interface
+    st.write(f"Seuil utilisé pour la décision : {optimal_threshold}")
 
-                # Afficher la prédiction
-                if prediction is not None:
-                    if prediction > optimal_threshold:
-                        st.error(f"Résultat : Crédit REFUSÉ (Risque élevé - {prediction:.2f})")
-                    else:
-                        st.success(f"Résultat : Crédit ACCEPTÉ (Risque faible - {prediction:.2f})")
+    try:
+        response = requests.post(f"{API_URL}/predict_client", json=data)
+        if response.status_code == 200:
+            data = response.json()
+            prediction = data.get("prediction", None)
+            shap_values = data.get("shap_values", None)
+            feature_names = data.get("feature_names", None)
 
-                # Afficher les valeurs SHAP si disponibles
-                if shap_values and feature_names:
-                    st.subheader("Facteurs influençant la décision du modèle")
-                    shap_df = pd.DataFrame({"Feature": feature_names, "SHAP Value": shap_values})
-                    st.bar_chart(shap_df.set_index("Feature"))
+            # Afficher la prédiction
+            if prediction is not None:
+                # Afficher la valeur brute de la prédiction
+                st.write(f"Valeur de la prédiction : {prediction}")
+
+                # Logique de décision basée sur le seuil
+                if prediction > optimal_threshold:
+                    st.error(f"Résultat : Crédit REFUSÉ (Risque élevé - {prediction:.2f})")
                 else:
-                    st.warning("Valeurs SHAP indisponibles.")
+                    st.success(f"Résultat : Crédit ACCEPTÉ (Risque faible - {prediction:.2f})")
+
+            # Afficher les valeurs SHAP si disponibles
+            if shap_values and feature_names:
+                st.subheader("Facteurs influençant la décision du modèle")
+                shap_df = pd.DataFrame({"Feature": feature_names, "SHAP Value": shap_values})
+                st.bar_chart(shap_df.set_index("Feature"))
             else:
-                st.error(f"Erreur API : {response.status_code}")
-                st.write(response.json())
-        except Exception as e:
-            st.error(f"Erreur lors de l'appel API : {e}")
+                st.warning("Valeurs SHAP indisponibles.")
+        else:
+            st.error(f"Erreur API : {response.status_code}")
+            st.write(response.json())
+    except Exception as e:
+        st.error(f"Erreur lors de l'appel API : {e}")
