@@ -16,11 +16,6 @@ warnings.filterwarnings("ignore")
 app = Flask(__name__)
 CORS(app)
 
-# Activer les logs
-logging.basicConfig(level=logging.INFO)
-print("Répertoire courant :", os.getcwd())
-print("Chemin attendu pour clients_data.csv :", CLIENTS_DATA_PATH)
-print("Fichier présent :", os.path.exists(CLIENTS_DATA_PATH))
 
 # Chemins des fichiers nécessaires
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -28,11 +23,19 @@ MODEL_PATH = os.path.join(BASE_DIR, "best_model_lgb_no.pkl")
 CLIENTS_DATA_PATH = os.path.join(BASE_DIR,"clients_data.csv")
 FEATURES_PATH = os.path.join(BASE_DIR, "selected_features.txt")
 
+# Activer les logs
+logging.basicConfig(level=logging.INFO)
+print("Répertoire courant :", os.getcwd())
+print("Chemin attendu pour clients_data.csv :", CLIENTS_DATA_PATH)
+print("Fichier présent :", os.path.exists(CLIENTS_DATA_PATH))
+
+# Vérifier si le fichier existe
 if not Path(CLIENTS_DATA_PATH).is_file():
     print("Fichier clients_data.csv introuvable au chemin :", CLIENTS_DATA_PATH)
     print("Fichiers dans le répertoire actuel :", os.listdir(BASE_DIR))
     print("Téléchargement en cours...")
     try:
+        GDRIVE_URL = "https://drive.google.com/uc?id=1KtMJY_PQy5EdE_qrfr7NN2_1cP10o0aQ"
         gdown.download(GDRIVE_URL, CLIENTS_DATA_PATH, quiet=False)
         print("Téléchargement terminé avec succès.")
     except Exception as e:
