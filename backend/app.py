@@ -18,9 +18,9 @@ CORS(app)
 logging.basicConfig(level=logging.INFO)
 
 # Chemins des fichiers nécessaires
-MODEL_PATH = "/Users/nelly/Desktop/projet7/backend/best_model_lgb_no.pkl"
+MODEL_PATH = "/Users/nelly/Desktop/projet 7/best_model_lgb_no.pkl"
 CLIENTS_DATA_PATH = "/Users/nelly/Desktop/projet 7/clients_data.csv"
-FEATURES_PATH = "/Users/nelly/Desktop/projet7/backend/selected_features.txt"
+FEATURES_PATH = "/Users/nelly/Desktop/projet 7/selected_features.txt"
 
 # Charger les fichiers nécessaires
 if not os.path.exists(MODEL_PATH) or not os.path.exists(FEATURES_PATH):
