@@ -26,8 +26,9 @@ jobs:
       - name: Télécharger clients_data.csv depuis Google Drive
         run: |
           pip install gdown
-          gdown https://drive.google.com/uc?id=1KtMJY_PQy5EdE_qrfr7NN2_1cP10o0aQ -O clients_data.csv
-          mv clients_data.csv backend/
+          gdown https://drive.google.com/uc?id=1KtMJY_PQy5EdE_qrfr7NN2_1cP10o0aQ -O backend/clients_data.csv
+      - name: Vérification des fichiers dans backend
+        run: ls -la backend/
 
       - name: Exécuter les tests unitaires
         run: pytest --maxfail=5 --disable-warnings
