@@ -1,45 +1,51 @@
-import pandas as pd
-import lightgbm as lgb
-import joblib
 import os
+import pandas as pd
+import joblib
+import lightgbm as lgb
 
 # Chemin vers les données prétraitées
-DATA_PATH = os.path.join("application_train_processed.csv")
+DATA_PATH = "/Users/Nelly/Desktop/projet 7/data/saved_train_no_balancing_smote.csv"
+
+# Vérifiez si le fichier de données existe
+if not os.path.exists(DATA_PATH):
+    raise FileNotFoundError(f"Fichier de données introuvable : {DATA_PATH}")
 
 # Charger les données prétraitées
 print("Chargement des données prétraitées...")
 df = pd.read_csv(DATA_PATH)
 
-# Définir les features et la cible
-selected_features = ["CODE_GENDER", "FLAG_OWN_CAR", "CNT_CHILDREN", "AMT_INCOME_TOTAL",
-                     "AMT_CREDIT", "AMT_ANNUITY", "AMT_GOODS_PRICE"]  # Exclure SK_ID_CURR
-X = df[selected_features]
-y = df["TARGET"]
+# Vérifier si 'SK_ID_CURR' et 'TARGET' sont présents
+if 'SK_ID_CURR' not in df.columns or 'TARGET' not in df.columns:
+    raise ValueError("Les colonnes 'SK_ID_CURR' et 'TARGET' doivent être présentes dans les données.")
 
-# Vérification des colonnes manquantes après le prétraitement
+# Nettoyer les noms des colonnes (supprimer les caractères spéciaux et espaces)
+df.columns = df.columns.str.replace(r"[^\w\s]", "_", regex=True).str.replace(" ", "_")
+print(f"Noms de colonnes nettoyés : {df.columns.tolist()}")
+
+# Exclure 'SK_ID_CURR' et 'TARGET' lors de la définition des features
+X = df.drop(columns=['SK_ID_CURR', 'TARGET'])
+y = df['TARGET']
+
+# Vérifier les colonnes utilisées pour l'entraînement
+print(f"Colonnes utilisées pour l'entraînement : {X.columns.tolist()}")
+
+# Vérifier les valeurs manquantes
 if X.isnull().sum().sum() > 0:
     raise ValueError("Des valeurs manquantes existent encore dans les données !")
 
-# Créer et entraîner le modèle
-print("Entraînement du modèle...")
-model = lgb.LGBMClassifier()
+# Entraîner le modèle
+print("Entraînement du modèle LightGBM...")
+model = lgb.LGBMClassifier(random_state=42)
 model.fit(X, y)
 
-# Sauvegarder le modèle entraîné au format .pkl à la racine
-print("Sauvegarde du modèle au format .pkl...")
-MODEL_PATH = "best_model_lgb_bal.pkl"
+# Sauvegarder le modèle entraîné
+MODEL_PATH = os.path.join("models", "best_model_lgb_no.pkl")
+os.makedirs(os.path.dirname(MODEL_PATH), exist_ok=True)
 joblib.dump(model, MODEL_PATH)
+print(f"Modèle sauvegardé dans : {MODEL_PATH}")
 
 # Sauvegarder les colonnes utilisées pour l'entraînement
-print("Sauvegarde des colonnes sélectionnées...")
-FEATURES_PATH = "selected_features.txt"
+FEATURES_PATH = os.path.join("models", "selected_features.txt")
 with open(FEATURES_PATH, "w") as f:
-    f.write(",".join(selected_features))
-
-# Créer un DataFrame client avec les features nécessaires (ajouter SK_ID_CURR pour référence)
-print("Sauvegarde des données clients (avec SK_ID_CURR, sans colonne TARGET)...")
-CLIENTS_DATA_PATH = "clients_data.csv"
-clients_data = df[["SK_ID_CURR"] + selected_features]  # Inclure SK_ID_CURR mais pas TARGET
-clients_data.to_csv(CLIENTS_DATA_PATH, index=True)  # Sauvegarder au format CSV
-
-print("Modèle, features et données clients (avec SK_ID_CURR, sans TARGET) sauvegardés avec succès !")
+    f.write(",".join(X.columns.tolist()))
+print(f"Colonnes sauvegardées dans : {FEATURES_PATH}")

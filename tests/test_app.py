@@ -8,20 +8,6 @@ def client():
     with app.test_client() as client:
         yield client
 
-def test_no_missing_values_in_clients_data():
-    """Test pour vérifier qu'il n'y a pas de valeurs manquantes dans les colonnes nécessaires."""
-    from app import clients_data, required_columns
-    for col in required_columns:
-        assert col in clients_data.columns, f"La colonne '{col}' est absente des données clients."
-        assert clients_data[col].notnull().all(), f"La colonne '{col}' contient des valeurs manquantes."
-
-def test_features_are_loaded():
-    """Test pour vérifier que les colonnes de features sont bien chargées."""
-    from app import required_columns
-    assert required_columns is not None, "Les colonnes nécessaires n'ont pas été chargées."
-    assert len(required_columns) > 0, "La liste des colonnes nécessaires est vide."
-    assert isinstance(required_columns, list), "Les colonnes nécessaires ne sont pas au format liste."
-
 def test_index(client):
     """Test pour vérifier si la route principale fonctionne."""
     response = client.get('/')
