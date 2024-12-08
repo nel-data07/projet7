@@ -6,6 +6,7 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 import warnings
 import shap
+import gdown
 
 # Ignorer les warnings
 warnings.filterwarnings("ignore")
