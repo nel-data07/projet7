@@ -23,6 +23,12 @@ jobs:
       - name: Installer les dépendances
         run: pip install -r requirements.txt
 
+      - name: Télécharger clients_data.csv depuis Google Drive
+        run: |
+          pip install gdown
+          gdown https://drive.google.com/uc?id=1KtMJY_PQy5EdE_qrfr7NN2_1cP10o0aQ -O clients_data.csv
+          mv clients_data.csv backend/
+
       - name: Exécuter les tests unitaires
         run: pytest --maxfail=5 --disable-warnings
 
@@ -30,6 +36,10 @@ jobs:
         run: |
           if [ ! -f backend/best_model_lgb_no.pkl ]; then
             echo "Fichier best_model_lgb_no.pkl introuvable dans le dossier backend !"
+            exit 1
+          fi
+          if [ ! -f backend/clients_data.csv ]; then
+            echo "Fichier clients_data.csv introuvable dans le dossier backend !"
             exit 1
           fi
 

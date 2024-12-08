@@ -18,14 +18,17 @@ CORS(app)
 logging.basicConfig(level=logging.INFO)
 
 # Chemins des fichiers nécessaires
-MODEL_PATH = "/Users/nelly/Desktop/projet7/backend/best_model_lgb_no.pkl"
-CLIENTS_DATA_PATH = "/Users/nelly/Desktop/projet 7/clients_data.csv"
-FEATURES_PATH = "/Users/nelly/Desktop/projet7/backend/selected_features.txt"
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+MODEL_PATH = os.path.join(BASE_DIR, "best_model_lgb_no.pkl")
+CLIENTS_DATA_PATH = os.path.join(BASE_DIR, 'clients_data.csv')
+FEATURES_PATH = os.path.join(BASE_DIR, "selected_features.txt")
 
 # Charger les fichiers nécessaires
 if not os.path.exists(MODEL_PATH) or not os.path.exists(FEATURES_PATH):
     raise FileNotFoundError("Modèle ou fichier des features introuvable.")
-
+if not os.path.exists(CLIENTS_DATA_PATH):
+    raise FileNotFoundError("clients_data.csv introuvable. Assurez-vous que le fichier est téléchargé.")
+    
 model = joblib.load(MODEL_PATH)
 logging.info("Modèle chargé avec succès.")
 
