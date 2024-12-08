@@ -8,6 +8,8 @@ import warnings
 import shap
 import gdown
 from pathlib import Path
+import matplotlib
+matplotlib.use('Agg')  # Désactive l'interface graphique
 
 # Ignorer les warnings
 warnings.filterwarnings("ignore")
