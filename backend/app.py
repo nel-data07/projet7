@@ -43,6 +43,8 @@ else:
 if not os.path.exists(MODEL_PATH) or not os.path.exists(FEATURES_PATH):
     raise FileNotFoundError("Modèle ou fichier des features introuvable.")
 
+# Charger le modèle
+model = joblib.load(MODEL_PATH)
 
 with open(FEATURES_PATH, "r") as f:
     required_features = f.read().strip().split(",")
