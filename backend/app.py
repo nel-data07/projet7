@@ -18,6 +18,9 @@ CORS(app)
 
 # Activer les logs
 logging.basicConfig(level=logging.INFO)
+print("Répertoire courant :", os.getcwd())
+print("Chemin attendu pour clients_data.csv :", CLIENTS_DATA_PATH)
+print("Fichier présent :", os.path.exists(CLIENTS_DATA_PATH))
 
 # Chemins des fichiers nécessaires
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -25,19 +28,17 @@ MODEL_PATH = os.path.join(BASE_DIR, "best_model_lgb_no.pkl")
 CLIENTS_DATA_PATH = os.path.join(BASE_DIR,"clients_data.csv")
 FEATURES_PATH = os.path.join(BASE_DIR, "selected_features.txt")
 
-# URL Google Drive du fichier
-GDRIVE_URL = "https://drive.google.com/uc?id=1KtMJY_PQy5EdE_qrfr7NN2_1cP10o0aQ"
-
-# Vérifier si le fichier existe
 if not Path(CLIENTS_DATA_PATH).is_file():
-    print("Fichier clients_data.csv introuvable, téléchargement en cours...")
+    print("Fichier clients_data.csv introuvable au chemin :", CLIENTS_DATA_PATH)
+    print("Fichiers dans le répertoire actuel :", os.listdir(BASE_DIR))
+    print("Téléchargement en cours...")
     try:
         gdown.download(GDRIVE_URL, CLIENTS_DATA_PATH, quiet=False)
         print("Téléchargement terminé avec succès.")
     except Exception as e:
         raise FileNotFoundError("Impossible de télécharger le fichier clients_data.csv.") from e
 else:
-    print("Fichier clients_data.csv trouvé.")
+    print("Fichier clients_data.csv trouvé. Pas besoin de le retélécharger.")
 
 # Charger les fichiers nécessaires
 if not os.path.exists(MODEL_PATH) or not os.path.exists(FEATURES_PATH):
