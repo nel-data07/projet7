@@ -40,12 +40,6 @@ model = joblib.load(MODEL_PATH)
 with open(FEATURES_PATH, "r") as f:
     required_features = f.read().strip().split(",")
 
-# Fonction pour charger les données en morceaux
-def load_data_in_chunks(file_path, chunksize=10000):
-    """Générateur pour charger le fichier CSV en morceaux."""
-    for chunk in pd.read_csv(file_path, chunksize=chunksize):
-        yield chunk
-
 @app.route("/", methods=["GET"])
 def index():
     return jsonify({"message": "API en ligne", "status": "success"}), 200
