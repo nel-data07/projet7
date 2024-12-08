@@ -7,6 +7,7 @@ from flask_cors import CORS
 import warnings
 import shap
 import gdown
+from pathlib import Path
 
 # Ignorer les warnings
 warnings.filterwarnings("ignore")
