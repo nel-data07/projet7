@@ -22,7 +22,7 @@ logging.basicConfig(level=logging.INFO)
 # Chemins des fichiers nécessaires
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 MODEL_PATH = os.path.join(BASE_DIR, "best_model_lgb_no.pkl")
-CLIENTS_DATA_PATH = os.path.join(BASE_DIR, 'clients_data.csv')
+CLIENTS_DATA_PATH = os.path.join(BASE_DIR, "projet7", "projet7", "backend", "clients_data.csv")
 FEATURES_PATH = os.path.join(BASE_DIR, "selected_features.txt")
 
 # URL Google Drive du fichier
