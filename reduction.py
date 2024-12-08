@@ -2,7 +2,7 @@ import os
 import pandas as pd
 
 # Chemins des fichiers
-input_file = "/Users/Nelly/Desktop/projet 7/clients_data.csv"  
+input_file = "/Users/Nelly/Desktop/projet 7/data/clients_data.csv"  
 output_file = "/Users/Nelly/Desktop/projet7/backend/clients_data.csv"  
 
 # Taille maximale en mégaoctets
