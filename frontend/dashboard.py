@@ -54,7 +54,7 @@ if client_ids:
 
                 # Affichage de la probabilité de défaut
                 if prediction is not None:
-                    optimal_threshold = 0.09  # Seuil pour la décision
+                    optimal_threshold = 0.08  # Seuil pour la décision
                     if prediction > optimal_threshold:
                         st.error(f"Résultat : Crédit REFUSÉ (Probabilité de défaut : {prediction:.2f})")
                     else:
