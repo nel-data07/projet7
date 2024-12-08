@@ -6,7 +6,7 @@ input_file = "/Users/Nelly/Desktop/projet 7/clients_data.csv"
 output_file = "/Users/Nelly/Desktop/projet7/backend/clients_data.csv"  
 
 # Taille maximale en mégaoctets
-max_size_mb = 100
+max_size_mb = 16  # Réduire à 16 Mo
 
 # Charger le fichier d'entrée
 print("Chargement du fichier d'origine...")
@@ -32,4 +32,3 @@ reduced_df.to_csv(output_file, index=False)
 # Vérifier la taille du fichier réduit
 file_size_mb = os.path.getsize(output_file) / (1024 * 1024)
 print(f"Fichier réduit enregistré : {output_file} ({file_size_mb:.2f} Mo)")
-

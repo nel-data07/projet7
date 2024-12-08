@@ -7,8 +7,7 @@ from flask_cors import CORS
 import warnings
 import shap
 from pathlib import Path
-import matplotlib
-matplotlib.use('Agg')  # Désactive l'interface graphique
+
 
 # Ignorer les warnings
 warnings.filterwarnings("ignore")
@@ -40,16 +39,18 @@ model = joblib.load(MODEL_PATH)
 with open(FEATURES_PATH, "r") as f:
     required_features = f.read().strip().split(",")
 
+# Charger les données clients dans un DataFrame
+clients_data = pd.read_csv(CLIENTS_DATA_PATH) if os.path.exists(CLIENTS_DATA_PATH) else pd.DataFrame()
+
 @app.route("/", methods=["GET"])
 def index():
     return jsonify({"message": "API en ligne", "status": "success"}), 200
 
 @app.route("/get_client_ids", methods=["GET"])
 def get_client_ids():
-    client_ids = []
-    for chunk in load_data_in_chunks(CLIENTS_DATA_PATH):
-        client_ids.extend(chunk["SK_ID_CURR"].tolist())
-    return jsonify({"client_ids": client_ids}), 200
+    if clients_data.empty:
+        return jsonify({"client_ids": []}), 200
+    return jsonify({"client_ids": clients_data["SK_ID_CURR"].tolist()}), 200
 
 @app.route("/predict", methods=["POST"])
 def predict():
@@ -58,19 +59,13 @@ def predict():
         data = request.get_json()
         sk_id_curr = int(data.get("SK_ID_CURR"))
 
-        # Parcourir les chunks pour trouver les données du client
-        client_data = None
-        for chunk in load_data_in_chunks(CLIENTS_DATA_PATH):
-            filtered_data = chunk[chunk["SK_ID_CURR"] == sk_id_curr]
-            if not filtered_data.empty:
-                client_data = filtered_data.iloc[0]  # Récupère la première occurrence
-                break
-
-        if client_data is None:
+        # Trouver les données du client
+        client_data = clients_data[clients_data["SK_ID_CURR"] == sk_id_curr]
+        if client_data.empty:
             return jsonify({"error": f"Client {sk_id_curr} introuvable."}), 404
 
         # Préparer les données pour la prédiction
-        data_for_prediction = pd.DataFrame([client_data])[required_features]
+        data_for_prediction = client_data[required_features]
         logging.info(f"Données prêtes pour la prédiction :\n{data_for_prediction}")
 
         # Prédiction avec le modèle
