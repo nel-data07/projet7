@@ -6,7 +6,6 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 import warnings
 import shap
-import gdown
 from pathlib import Path
 import matplotlib
 matplotlib.use('Agg')  # Désactive l'interface graphique
@@ -18,11 +17,10 @@ warnings.filterwarnings("ignore")
 app = Flask(__name__)
 CORS(app)
 
-
 # Chemins des fichiers nécessaires
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 MODEL_PATH = os.path.join(BASE_DIR, "best_model_lgb_no.pkl")
-CLIENTS_DATA_PATH = os.path.join(BASE_DIR,"clients_data.csv")
+CLIENTS_DATA_PATH = os.path.join(BASE_DIR, "clients_data.csv")
 FEATURES_PATH = os.path.join(BASE_DIR, "selected_features.txt")
 
 # Activer les logs
@@ -31,31 +29,22 @@ print("Répertoire courant :", os.getcwd())
 print("Chemin attendu pour clients_data.csv :", CLIENTS_DATA_PATH)
 print("Fichier présent :", os.path.exists(CLIENTS_DATA_PATH))
 
-# Vérifier si le fichier existe
-if not Path(CLIENTS_DATA_PATH).is_file():
-    print("Fichier clients_data.csv introuvable au chemin :", CLIENTS_DATA_PATH)
-    print("Fichiers dans le répertoire actuel :", os.listdir(BASE_DIR))
-    print("Téléchargement en cours...")
-    try:
-        GDRIVE_URL = "https://drive.google.com/uc?id=1KtMJY_PQy5EdE_qrfr7NN2_1cP10o0aQ"
-        gdown.download(GDRIVE_URL, CLIENTS_DATA_PATH, quiet=False)
-        print("Téléchargement terminé avec succès.")
-    except Exception as e:
-        raise FileNotFoundError("Impossible de télécharger le fichier clients_data.csv.") from e
-else:
-    print("Fichier clients_data.csv trouvé. Pas besoin de le retélécharger.")
-
-# Charger les fichiers nécessaires
+# Vérifier si les fichiers nécessaires existent
 if not os.path.exists(MODEL_PATH) or not os.path.exists(FEATURES_PATH):
     raise FileNotFoundError("Modèle ou fichier des features introuvable.")
 
 # Charger le modèle
 model = joblib.load(MODEL_PATH)
 
+# Charger les features nécessaires
 with open(FEATURES_PATH, "r") as f:
     required_features = f.read().strip().split(",")
 
-clients_data = pd.read_csv(CLIENTS_DATA_PATH) if os.path.exists(CLIENTS_DATA_PATH) else pd.DataFrame()
+# Fonction pour charger les données en morceaux
+def load_data_in_chunks(file_path, chunksize=10000):
+    """Générateur pour charger le fichier CSV en morceaux."""
+    for chunk in pd.read_csv(file_path, chunksize=chunksize):
+        yield chunk
 
 @app.route("/", methods=["GET"])
 def index():
@@ -63,9 +52,10 @@ def index():
 
 @app.route("/get_client_ids", methods=["GET"])
 def get_client_ids():
-    if clients_data.empty:
-        return jsonify({"client_ids": []}), 200
-    return jsonify({"client_ids": clients_data["SK_ID_CURR"].tolist()}), 200
+    client_ids = []
+    for chunk in load_data_in_chunks(CLIENTS_DATA_PATH):
+        client_ids.extend(chunk["SK_ID_CURR"].tolist())
+    return jsonify({"client_ids": client_ids}), 200
 
 @app.route("/predict", methods=["POST"])
 def predict():
@@ -73,22 +63,25 @@ def predict():
         # Récupérer les données envoyées
         data = request.get_json()
         sk_id_curr = int(data.get("SK_ID_CURR"))
-        client_data = clients_data[clients_data["SK_ID_CURR"] == sk_id_curr]
-        if client_data.empty:
+
+        # Parcourir les chunks pour trouver les données du client
+        client_data = None
+        for chunk in load_data_in_chunks(CLIENTS_DATA_PATH):
+            filtered_data = chunk[chunk["SK_ID_CURR"] == sk_id_curr]
+            if not filtered_data.empty:
+                client_data = filtered_data.iloc[0]  # Récupère la première occurrence
+                break
+
+        if client_data is None:
             return jsonify({"error": f"Client {sk_id_curr} introuvable."}), 404
 
-        # Vérification si plusieurs lignes existent et utilisation de la première
-        if len(client_data) > 1:
-            logging.warning(f"Plusieurs lignes trouvées pour le client {sk_id_curr}. Utilisation de la première.")
-        client_data = client_data.iloc[0:1]
-
         # Préparer les données pour la prédiction
-        data_for_prediction = client_data[required_features]
+        data_for_prediction = pd.DataFrame([client_data])[required_features]
         logging.info(f"Données prêtes pour la prédiction :\n{data_for_prediction}")
 
         # Prédiction avec le modèle
         predictions = model.predict_proba(data_for_prediction)
-        probability_of_default = predictions[0][1]  # Probabilité pour la classe positive (défaut de paiement)
+        probability_of_default = predictions[0][1]  # Probabilité pour la classe positive
         logging.info(f"Probabilité de défaut de paiement : {probability_of_default}")
 
         # Calcul des valeurs SHAP
@@ -104,7 +97,7 @@ def predict():
         # Retourner la réponse
         return jsonify({
             "SK_ID_CURR": sk_id_curr,
-            "probability_of_default": probability_of_default,  # Garder seulement la probabilité de défaut
+            "probability_of_default": probability_of_default,
             "shap_values": shap_values.tolist(),
             "feature_names": required_features
         }), 200
