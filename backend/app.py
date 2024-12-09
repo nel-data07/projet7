@@ -6,8 +6,6 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 import warnings
 import shap
-from pathlib import Path
-
 
 # Ignorer les warnings
 warnings.filterwarnings("ignore")
@@ -16,19 +14,16 @@ warnings.filterwarnings("ignore")
 app = Flask(__name__)
 CORS(app)
 
+# Activer les logs
+logging.basicConfig(level=logging.INFO)
+
 # Chemins des fichiers nécessaires
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 MODEL_PATH = os.path.join(BASE_DIR, "best_model_lgb_no.pkl")
 CLIENTS_DATA_PATH = os.path.join(BASE_DIR, "clients_data.csv")
 FEATURES_PATH = os.path.join(BASE_DIR, "selected_features.txt")
 
-# Activer les logs
-logging.basicConfig(level=logging.INFO)
-print("Répertoire courant :", os.getcwd())
-print("Chemin attendu pour clients_data.csv :", CLIENTS_DATA_PATH)
-print("Fichier présent :", os.path.exists(CLIENTS_DATA_PATH))
-
-# Vérifier si les fichiers nécessaires existent
+# Vérifications et chargements initiaux
 if not os.path.exists(MODEL_PATH) or not os.path.exists(FEATURES_PATH):
     raise FileNotFoundError("Modèle ou fichier des features introuvable.")
 
@@ -39,21 +34,29 @@ model = joblib.load(MODEL_PATH)
 with open(FEATURES_PATH, "r") as f:
     required_features = f.read().strip().split(",")
 
-# Charger les données clients dans un DataFrame
-clients_data = pd.read_csv(CLIENTS_DATA_PATH) if os.path.exists(CLIENTS_DATA_PATH) else pd.DataFrame()
+# Charger les données clients
+if os.path.exists(CLIENTS_DATA_PATH):
+    clients_data = pd.read_csv(CLIENTS_DATA_PATH)
+    logging.info(f"Fichier clients_data.csv chargé avec succès. Nombre de clients : {len(clients_data)}")
+else:
+    clients_data = pd.DataFrame()
+    logging.warning("Le fichier clients_data.csv est introuvable ou vide.")
 
 @app.route("/", methods=["GET"])
 def index():
+    """Endpoint racine pour vérifier l'état de l'API"""
     return jsonify({"message": "API en ligne", "status": "success"}), 200
 
 @app.route("/get_client_ids", methods=["GET"])
 def get_client_ids():
+    """Récupérer la liste des IDs clients disponibles"""
     if clients_data.empty:
         return jsonify({"client_ids": []}), 200
     return jsonify({"client_ids": clients_data["SK_ID_CURR"].tolist()}), 200
 
 @app.route("/predict", methods=["POST"])
 def predict():
+    """Faire une prédiction pour un client donné"""
     try:
         # Récupérer les données envoyées
         data = request.get_json()
@@ -83,16 +86,47 @@ def predict():
         else:
             shap_values = shap_values[0]
 
+        # Informations descriptives du client
+        client_info = client_data.iloc[0].to_dict()
+
         # Retourner la réponse
         return jsonify({
             "SK_ID_CURR": sk_id_curr,
             "probability_of_default": probability_of_default,
             "shap_values": shap_values.tolist(),
-            "feature_names": required_features
+            "feature_names": required_features,
+            "client_info": client_info
         }), 200
 
     except Exception as e:
         logging.error(f"Erreur lors de la prédiction : {e}")
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/get_global_importance", methods=["GET"])
+def get_global_importance():
+    """Calculer les importances globales des caractéristiques"""
+    try:
+        if clients_data.empty:
+            return jsonify({"error": "Les données clients sont vides ou indisponibles."}), 404
+
+        explainer = shap.TreeExplainer(model)
+        shap_values = explainer.shap_values(clients_data[required_features])
+
+        if isinstance(shap_values, list):
+            shap_values = shap_values[1]
+
+        global_importances = pd.DataFrame({
+            "Feature": required_features,
+            "Global Importance": abs(shap_values).mean(axis=0)
+        }).sort_values(by="Global Importance", ascending=False)
+
+        return jsonify({
+            "status": "success",
+            "global_importances": global_importances.to_dict(orient="records")
+        }), 200
+
+    except Exception as e:
+        logging.error(f"Erreur lors du calcul des importances globales : {e}")
         return jsonify({"error": str(e)}), 500
 
 if __name__ == "__main__":
