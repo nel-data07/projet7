@@ -182,27 +182,36 @@ def predict_with_custom_values():
         logging.error(f"Erreur lors de la prédiction avec valeurs personnalisées : {e}")
         return jsonify({"error": str(e)}), 500
 
-# Chemin pour stocker l'ID actuel
+# Chemin vers le fichier contenant la liste d'IDs disponibles
 ID_FILE_PATH = "current_id.txt"
 
-def read_last_id():
-    """Lire le dernier ID à partir du fichier."""
+def read_available_ids():
+    """Lire la liste d'IDs disponibles à partir du fichier."""
     if os.path.exists(ID_FILE_PATH):
         with open(ID_FILE_PATH, "r") as f:
-            return int(f.read().strip())
-    return 456208  # ID initial par défaut
+            ids = f.read().strip().split(",")
+            return [int(id) for id in ids if id.strip().isdigit()]
+    return []
 
-def write_next_id(next_id):
-    """Écrire le prochain ID dans le fichier."""
+def write_available_ids(ids):
+    """Écrire la liste mise à jour d'IDs disponibles dans le fichier."""
     with open(ID_FILE_PATH, "w") as f:
-        f.write(str(next_id))
+        f.write(",".join(map(str, ids)))
 
 @app.route("/get_next_client_id", methods=["GET"])
 def get_next_client_id():
-    """Renvoie un nouvel ID client incrémenté à chaque appel."""
-    current_id = read_last_id()
-    next_id = current_id + 1
-    write_next_id(next_id)
+    """Renvoie un ID disponible pour un nouveau client."""
+    available_ids = read_available_ids()
+    
+    if not available_ids:
+        return jsonify({"error": "Aucun ID disponible dans la liste."}), 404
+
+    # Attribuer le premier ID disponible
+    next_id = available_ids.pop(0)
+    
+    # Mettre à jour le fichier avec les IDs restants
+    write_available_ids(available_ids)
+    
     return jsonify({"next_id": next_id}), 200
 
 @app.route("/predict_new_client", methods=["POST"])
