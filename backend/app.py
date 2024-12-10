@@ -216,14 +216,14 @@ def get_next_client_id():
 
 @app.route("/predict_new_client", methods=["POST"])
 def predict_new_client():
-    """Faire une prédiction pour un nouveau client avec des valeurs par défaut"""
+    """Faire une prédiction pour un nouveau client avec des valeurs par défaut et médianes"""
     try:
         # Récupérer les données envoyées
         data = request.get_json()
 
         # Créer une ligne avec des valeurs par défaut
         default_client = {col: 0 for col in required_features}
-        
+
         # Remplacer les colonnes avec les données fournies
         for key, value in data.items():
             if key in default_client:
@@ -231,6 +231,16 @@ def predict_new_client():
 
         # Convertir en DataFrame
         new_client_df = pd.DataFrame([default_client])
+
+        # Remplacer les valeurs par défaut avec les médianes des données clients existantes
+        if not clients_data.empty:
+            for col in new_client_df.columns:
+                if new_client_df[col].iloc[0] == 0:  # Vérifier si la valeur est par défaut (0)
+                    if col in clients_data.columns:
+                        median_value = clients_data[col].median()
+                        new_client_df[col] = median_value
+                    else:
+                        logging.warning(f"Colonne {col} non trouvée dans les données existantes.")
 
         # Prédiction avec le modèle
         predictions = model.predict_proba(new_client_df)
