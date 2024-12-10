@@ -182,6 +182,7 @@ def predict_with_custom_values():
         logging.error(f"Erreur lors de la prédiction avec valeurs personnalisées : {e}")
         return jsonify({"error": str(e)}), 500
 
+CURRENT_MAX_ID = 456208  # Dernier ID connu dans clients_data
 @app.route("/get_next_client_id", methods=["GET"])
 def get_next_client_id():
     """Renvoie un nouvel ID client incrémenté à chaque appel."""
