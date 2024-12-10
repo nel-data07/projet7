@@ -182,5 +182,48 @@ def predict_with_custom_values():
         logging.error(f"Erreur lors de la prédiction avec valeurs personnalisées : {e}")
         return jsonify({"error": str(e)}), 500
 
+@app.route("/predict_new_client", methods=["POST"])
+def predict_new_client():
+    """Faire une prédiction pour un nouveau client avec des valeurs par défaut"""
+    try:
+        # Récupérer les données envoyées
+        data = request.get_json()
+
+        # Créer une ligne avec des valeurs par défaut
+        default_client = {col: 0 for col in required_features}
+        
+        # Remplacer les colonnes avec les données fournies
+        for key, value in data.items():
+            if key in default_client:
+                default_client[key] = value
+
+        # Convertir en DataFrame
+        new_client_df = pd.DataFrame([default_client])
+
+        # Prédiction avec le modèle
+        predictions = model.predict_proba(new_client_df)
+        probability_of_default = predictions[0][1]  # Probabilité pour la classe positive
+
+        # Calcul des valeurs SHAP
+        explainer = shap.TreeExplainer(model)
+        shap_values = explainer.shap_values(new_client_df)
+
+        # Gestion des SHAP values pour plusieurs classes
+        if len(shap_values) > 1:
+            shap_values = shap_values[1]  # SHAP values pour la classe positive
+        else:
+            shap_values = shap_values[0]
+
+        # Retourner la réponse
+        return jsonify({
+            "probability_of_default": probability_of_default,
+            "shap_values": shap_values.tolist(),
+            "feature_names": required_features
+        }), 200
+
+    except Exception as e:
+        logging.error(f"Erreur lors de la prédiction pour un nouveau client : {e}")
+        return jsonify({"error": str(e)}), 500
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
