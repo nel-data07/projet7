@@ -182,13 +182,28 @@ def predict_with_custom_values():
         logging.error(f"Erreur lors de la prédiction avec valeurs personnalisées : {e}")
         return jsonify({"error": str(e)}), 500
 
-CURRENT_MAX_ID = 456208  # Dernier ID connu dans clients_data
+# Chemin pour stocker l'ID actuel
+ID_FILE_PATH = "current_id.txt"
+
+def read_last_id():
+    """Lire le dernier ID à partir du fichier."""
+    if os.path.exists(ID_FILE_PATH):
+        with open(ID_FILE_PATH, "r") as f:
+            return int(f.read().strip())
+    return 456208  # ID initial par défaut
+
+def write_next_id(next_id):
+    """Écrire le prochain ID dans le fichier."""
+    with open(ID_FILE_PATH, "w") as f:
+        f.write(str(next_id))
+
 @app.route("/get_next_client_id", methods=["GET"])
 def get_next_client_id():
     """Renvoie un nouvel ID client incrémenté à chaque appel."""
-    global CURRENT_MAX_ID
-    CURRENT_MAX_ID += 1  # Incrémenter l'ID
-    return jsonify({"next_id": CURRENT_MAX_ID}), 200
+    current_id = read_last_id()
+    next_id = current_id + 1
+    write_next_id(next_id)
+    return jsonify({"next_id": next_id}), 200
 
 @app.route("/predict_new_client", methods=["POST"])
 def predict_new_client():
