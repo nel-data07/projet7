@@ -182,6 +182,16 @@ def predict_with_custom_values():
         logging.error(f"Erreur lors de la prédiction avec valeurs personnalisées : {e}")
         return jsonify({"error": str(e)}), 500
 
+@app.route("/get_next_client_id", methods=["GET"])
+def get_next_client_id():
+    """Renvoie le prochain ID client disponible."""
+    if not clients_data.empty:
+        max_id = clients_data["SK_ID_CURR"].max()
+    else:
+        max_id = 100000  # ID initial par défaut
+    next_id = max_id + 1
+    return jsonify({"next_id": next_id}), 200
+
 @app.route("/predict_new_client", methods=["POST"])
 def predict_new_client():
     """Faire une prédiction pour un nouveau client avec des valeurs par défaut"""
