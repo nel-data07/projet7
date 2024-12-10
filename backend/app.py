@@ -129,5 +129,58 @@ def get_global_importance():
         logging.error(f"Erreur lors du calcul des importances globales : {e}")
         return jsonify({"error": str(e)}), 500
 
+@app.route("/predict_with_custom_values", methods=["POST"])
+def predict_with_custom_values():
+    """Faire une prédiction avec des valeurs modifiées par l'utilisateur"""
+    try:
+        # Récupérer les données envoyées
+        data = request.get_json()
+        sk_id_curr = int(data.get("SK_ID_CURR"))
+
+        # Trouver les données du client
+        client_data = clients_data[clients_data["SK_ID_CURR"] == sk_id_curr].copy()
+        if client_data.empty:
+            return jsonify({"error": f"Client {sk_id_curr} introuvable."}), 404
+
+        # Mise à jour des valeurs si elles sont fournies dans la requête
+        for key, value in data.items():
+            if key in client_data.columns and value is not None:
+                client_data[key] = value
+
+        # Préparer les données pour la prédiction
+        data_for_prediction = client_data[required_features]
+        logging.info(f"Données prêtes pour la prédiction avec valeurs personnalisées :\n{data_for_prediction}")
+
+        # Prédiction avec le modèle
+        predictions = model.predict_proba(data_for_prediction)
+        probability_of_default = predictions[0][1]  # Probabilité pour la classe positive
+        logging.info(f"Probabilité de défaut de paiement avec valeurs personnalisées : {probability_of_default}")
+
+        # Calcul des valeurs SHAP
+        explainer = shap.TreeExplainer(model)
+        shap_values = explainer.shap_values(data_for_prediction)
+
+        # Gestion des SHAP values pour plusieurs classes
+        if len(shap_values) > 1:
+            shap_values = shap_values[1]  # SHAP values pour la classe positive
+        else:
+            shap_values = shap_values[0]
+
+        # Informations descriptives du client
+        client_info = client_data.iloc[0].to_dict()
+
+        # Retourner la réponse
+        return jsonify({
+            "SK_ID_CURR": sk_id_curr,
+            "probability_of_default": probability_of_default,
+            "shap_values": shap_values.tolist(),
+            "feature_names": required_features,
+            "client_info": client_info
+        }), 200
+
+    except Exception as e:
+        logging.error(f"Erreur lors de la prédiction avec valeurs personnalisées : {e}")
+        return jsonify({"error": str(e)}), 500
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
