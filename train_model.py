@@ -4,7 +4,7 @@ import joblib
 import lightgbm as lgb
 
 # Chemin vers les données prétraitées
-DATA_PATH = "/Users/Nelly/Desktop/projet 7/data/saved_train_no_balancing_smote.csv"
+DATA_PATH = "/Users/Nelly/Desktop/projet 7/data/clients_data.csv"
 
 # Vérifiez si le fichier de données existe
 if not os.path.exists(DATA_PATH):
@@ -39,13 +39,13 @@ model = lgb.LGBMClassifier(random_state=42)
 model.fit(X, y)
 
 # Sauvegarder le modèle entraîné
-MODEL_PATH = os.path.join("models", "best_model_lgb_no.pkl")
+MODEL_PATH = os.path.join("backend", "best_model_lgb_no.pkl")
 os.makedirs(os.path.dirname(MODEL_PATH), exist_ok=True)
 joblib.dump(model, MODEL_PATH)
 print(f"Modèle sauvegardé dans : {MODEL_PATH}")
 
 # Sauvegarder les colonnes utilisées pour l'entraînement
-FEATURES_PATH = os.path.join("models", "selected_features.txt")
+FEATURES_PATH = os.path.join("backend", "selected_features.txt")
 with open(FEATURES_PATH, "w") as f:
     f.write(",".join(X.columns.tolist()))
 print(f"Colonnes sauvegardées dans : {FEATURES_PATH}")
