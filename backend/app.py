@@ -43,67 +43,111 @@ else:
     logging.warning("Le fichier clients_data.csv est introuvable ou vide.")
 
 @app.route("/", methods=["GET"])
+import os
+import logging
+import pandas as pd
+import joblib
+from flask import Flask, request, jsonify, render_template_string
+from flask_cors import CORS
+import warnings
+
+# Ignorer les warnings
+warnings.filterwarnings("ignore")
+
+# Initialiser une application Flask
+app = Flask(__name__)
+CORS(app)
+
+# Activer les logs
+logging.basicConfig(level=logging.INFO)
+
+# Chemins des fichiers nécessaires
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+MODEL_PATH = os.path.join(BASE_DIR, "best_model_lgb_no.pkl")
+CLIENTS_DATA_PATH = os.path.join(BASE_DIR, "clients_data.csv")
+FEATURES_PATH = os.path.join(BASE_DIR, "selected_features.txt")
+
+# Vérifications et chargements initiaux
+if not os.path.exists(MODEL_PATH) or not os.path.exists(FEATURES_PATH):
+    raise FileNotFoundError("Modèle ou fichier des features introuvable.")
+
+# Charger le modèle
+model = joblib.load(MODEL_PATH)
+
+# Charger les features nécessaires
+with open(FEATURES_PATH, "r") as f:
+    required_features = f.read().strip().split(",")
+
+# Charger les données clients
+if os.path.exists(CLIENTS_DATA_PATH):
+    clients_data = pd.read_csv(CLIENTS_DATA_PATH)
+    logging.info(f"Fichier clients_data.csv chargé avec succès. Nombre de clients : {len(clients_data)}")
+else:
+    clients_data = pd.DataFrame()
+    logging.warning("Le fichier clients_data.csv est introuvable ou vide.")
+
+@app.route("/", methods=["GET"])
 def index():
-    """Endpoint racine pour interagir avec l'API via un formulaire simple."""
-    prediction_result = None
-    error_message = None
-
-    if request.method == "POST":
-        try:
-            # Récupérer l'ID client depuis le formulaire
-            sk_id_curr = int(request.form["sk_id_curr"])
-
-            # Trouver les données du client
-            client_data = clients_data[clients_data["SK_ID_CURR"] == sk_id_curr]
-            if client_data.empty:
-                error_message = f"Client {sk_id_curr} introuvable."
-            else:
-                # Préparer les données pour la prédiction
-                data_for_prediction = client_data[required_features]
-
-                # Effectuer la prédiction
-                predictions = model.predict_proba(data_for_prediction)
-                probability_of_default = predictions[0][1]
-
-                # Décision basée sur le seuil
-                decision = "Crédit refusé" if probability_of_default > 0.09 else "Crédit accepté"
-
-                # Résultat
-                prediction_result = {
-                    "ID client": sk_id_curr,
-                    "Probabilité de défaut de paiement": round(probability_of_default, 4),
-                    "Décision": decision,
-                }
-        except Exception as e:
-            error_message = f"Erreur : {str(e)}"
-
+    """Endpoint racine pour afficher la page HTML du formulaire."""
     html_form = """
-  <!DOCTYPE html>
-    <html>
-        <head>
-            <title>Prédiction Crédit</title>
-        </head>
-        <body>
-            <h1>Prédiction de Défaut de Paiement</h1>
-            <form method="POST" action="/">
-                <label>Entrez l'ID client :</label><br>
-                <input type="number" name="sk_id_curr" required><br><br>
-                <button type="submit">Envoyer</button>
-            </form>
-            {% if prediction_result %}
-                <h2>Résultat</h2>
-                <p>ID client : {{ prediction_result["ID client"] }}</p>
-                <p>Probabilité : {{ prediction_result["Probabilité de défaut de paiement"] }}</p>
-                <p>Décision : {{ prediction_result["Décision"] }}</p>
-            {% endif %}
-            {% if error_message %}
-                <p style="color:red;">Erreur : {{ error_message }}</p>
-            {% endif %}
-        </body>
+    <!DOCTYPE html>
+    <html lang="fr">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Prédiction API</title>
+    </head>
+    <body>
+        <h1>Prédiction de Défaut</h1>
+        <form method="POST" action="/predict">
+            <label for="clientId">ID Client :</label>
+            <input type="number" id="clientId" name="SK_ID_CURR" required>
+            <button type="submit">Envoyer</button>
+        </form>
+    </body>
     </html>
     """
+    return html_form
 
-    return render_template_string(form_html, prediction_result=prediction_result, error_message=error_message)
+@app.route("/predict", methods=["POST"])
+def predict():
+    """Endpoint pour effectuer une prédiction à partir d'un ID client."""
+    try:
+        # Récupérer les données envoyées
+        data = request.get_json()
+        if "SK_ID_CURR" not in data:
+            return jsonify({"error": "ID client manquant."}), 400
+
+        sk_id_curr = int(data["SK_ID_CURR"])
+
+        # Trouver les données du client
+        client_data = clients_data[clients_data["SK_ID_CURR"] == sk_id_curr]
+        if client_data.empty:
+            return jsonify({"error": f"Client {sk_id_curr} introuvable."}), 404
+
+        # Préparer les données pour la prédiction
+        data_for_prediction = client_data[required_features]
+
+        # Effectuer la prédiction
+        predictions = model.predict_proba(data_for_prediction)
+        probability_of_default = predictions[0][1]  # Probabilité pour la classe positive
+
+        # Décision basée sur le seuil
+        decision = "Crédit refusé" if probability_of_default > 0.09 else "Crédit accepté"
+
+        # Retourner la réponse
+        return jsonify({
+            "SK_ID_CURR": sk_id_curr,
+            "probability_of_default": round(probability_of_default, 4),
+            "decision": decision
+        }), 200
+
+    except Exception as e:
+        logging.error(f"Erreur lors de la prédiction : {e}")
+        return jsonify({"error": str(e)}), 500
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000)
 
 @app.route("/get_client_ids", methods=["GET"])
 def get_client_ids():
