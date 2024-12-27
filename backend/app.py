@@ -43,50 +43,6 @@ else:
     logging.warning("Le fichier clients_data.csv est introuvable ou vide.")
 
 @app.route("/", methods=["GET"])
-import os
-import logging
-import pandas as pd
-import joblib
-from flask import Flask, request, jsonify, render_template_string
-from flask_cors import CORS
-import warnings
-
-# Ignorer les warnings
-warnings.filterwarnings("ignore")
-
-# Initialiser une application Flask
-app = Flask(__name__)
-CORS(app)
-
-# Activer les logs
-logging.basicConfig(level=logging.INFO)
-
-# Chemins des fichiers nécessaires
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-MODEL_PATH = os.path.join(BASE_DIR, "best_model_lgb_no.pkl")
-CLIENTS_DATA_PATH = os.path.join(BASE_DIR, "clients_data.csv")
-FEATURES_PATH = os.path.join(BASE_DIR, "selected_features.txt")
-
-# Vérifications et chargements initiaux
-if not os.path.exists(MODEL_PATH) or not os.path.exists(FEATURES_PATH):
-    raise FileNotFoundError("Modèle ou fichier des features introuvable.")
-
-# Charger le modèle
-model = joblib.load(MODEL_PATH)
-
-# Charger les features nécessaires
-with open(FEATURES_PATH, "r") as f:
-    required_features = f.read().strip().split(",")
-
-# Charger les données clients
-if os.path.exists(CLIENTS_DATA_PATH):
-    clients_data = pd.read_csv(CLIENTS_DATA_PATH)
-    logging.info(f"Fichier clients_data.csv chargé avec succès. Nombre de clients : {len(clients_data)}")
-else:
-    clients_data = pd.DataFrame()
-    logging.warning("Le fichier clients_data.csv est introuvable ou vide.")
-
-@app.route("/", methods=["GET"])
 def index():
     """Endpoint racine pour afficher la page HTML du formulaire."""
     html_form = """
