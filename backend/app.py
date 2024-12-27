@@ -46,51 +46,28 @@ else:
 def index():
     """Endpoint racine pour interagir avec l'API via un formulaire simple."""
     html_form = """
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Prédiction API</title>
-        <script>
-            async function fetchPrediction() {
-                const id = document.getElementById("clientId").value;
-                const resultDiv = document.getElementById("result");
-                resultDiv.innerHTML = "Chargement...";
-
-                try {
-                    const response = await fetch("/predict", {
-                        method: "POST",
-                        headers: {
-                            "Content-Type": "application/json"
-                        },
-                        body: JSON.stringify({ SK_ID_CURR: id })
-                    });
-
-                    const data = await response.json();
-                    if (response.ok) {
-                        resultDiv.innerHTML = `
-                            <h3>Résultat :</h3>
-                            <p><strong>ID Client :</strong> ${data.SK_ID_CURR}</p>
-                            <p><strong>Probabilité de défaut :</strong> ${data.probability_of_default}</p>
-                            <p><strong>Décision :</strong> ${data.decision}</p>
-                        `;
-                    } else {
-                        resultDiv.innerHTML = `<p style="color:red;">Erreur : ${data.error}</p>`;
-                    }
-                } catch (error) {
-                    resultDiv.innerHTML = `<p style="color:red;">Erreur réseau : ${error.message}</p>`;
-                }
-            }
-        </script>
-    </head>
-    <body>
-        <h1>Prédiction API</h1>
-        <p>Entrez un ID client pour obtenir la prédiction :</p>
-        <input type="number" id="clientId" placeholder="ID Client" required>
-        <button onclick="fetchPrediction()">Envoyer</button>
-        <div id="result" style="margin-top: 20px;"></div>
-    </body>
+  <!DOCTYPE html>
+    <html>
+        <head>
+            <title>Prédiction Crédit</title>
+        </head>
+        <body>
+            <h1>Prédiction de Défaut de Paiement</h1>
+            <form method="POST" action="/">
+                <label>Entrez l'ID client :</label><br>
+                <input type="number" name="sk_id_curr" required><br><br>
+                <button type="submit">Envoyer</button>
+            </form>
+            {% if prediction_result %}
+                <h2>Résultat</h2>
+                <p>ID client : {{ prediction_result["ID client"] }}</p>
+                <p>Probabilité : {{ prediction_result["Probabilité de défaut de paiement"] }}</p>
+                <p>Décision : {{ prediction_result["Décision"] }}</p>
+            {% endif %}
+            {% if error_message %}
+                <p style="color:red;">Erreur : {{ error_message }}</p>
+            {% endif %}
+        </body>
     </html>
     """
     return html_form
