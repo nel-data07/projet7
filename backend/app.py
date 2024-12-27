@@ -70,7 +70,8 @@ def index():
         </body>
     </html>
     """
-    return html_form
+
+    return render_template_string(form_html, prediction_result=prediction_result, error_message=error_message)
 
 @app.route("/get_client_ids", methods=["GET"])
 def get_client_ids():
