@@ -45,6 +45,38 @@ else:
 @app.route("/", methods=["GET"])
 def index():
     """Endpoint racine pour interagir avec l'API via un formulaire simple."""
+    prediction_result = None
+    error_message = None
+
+    if request.method == "POST":
+        try:
+            # Récupérer l'ID client depuis le formulaire
+            sk_id_curr = int(request.form["sk_id_curr"])
+
+            # Trouver les données du client
+            client_data = clients_data[clients_data["SK_ID_CURR"] == sk_id_curr]
+            if client_data.empty:
+                error_message = f"Client {sk_id_curr} introuvable."
+            else:
+                # Préparer les données pour la prédiction
+                data_for_prediction = client_data[required_features]
+
+                # Effectuer la prédiction
+                predictions = model.predict_proba(data_for_prediction)
+                probability_of_default = predictions[0][1]
+
+                # Décision basée sur le seuil
+                decision = "Crédit refusé" if probability_of_default > 0.09 else "Crédit accepté"
+
+                # Résultat
+                prediction_result = {
+                    "ID client": sk_id_curr,
+                    "Probabilité de défaut de paiement": round(probability_of_default, 4),
+                    "Décision": decision,
+                }
+        except Exception as e:
+            error_message = f"Erreur : {str(e)}"
+
     html_form = """
   <!DOCTYPE html>
     <html>
