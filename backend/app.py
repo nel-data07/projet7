@@ -44,13 +44,13 @@ else:
 
 @app.route("/", methods=["GET"])
 def index():
-    """Endpoint racine pour afficher un formulaire simple."""
+    """Endpoint pour afficher saisir et afficher prediction a partir d'un formulaire"""
     html_form = """
     <!DOCTYPE html>
     <html lang="fr">
     <head>
         <meta charset="UTF-8">
-        <title>Prédiction API</title>
+        <title>Prédiction crédit</title>
         <script>
             async function fetchPrediction() {
                 const id = document.getElementById("clientId").value;
@@ -82,9 +82,9 @@ def index():
         </script>
     </head>
     <body>
-        <h1>Prédiction</h1>
+        <h1>Prédiction de Défaut de Paiement</h1>
         <form onsubmit="event.preventDefault(); fetchPrediction();">
-            <label>ID Client :</label>
+            <label>Entrez l'ID client :</label>
             <input type="number" id="clientId" required>
             <button type="submit">Envoyer</button>
         </form>
