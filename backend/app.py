@@ -44,8 +44,56 @@ else:
 
 @app.route("/", methods=["GET"])
 def index():
-    """Endpoint racine pour vérifier l'état de l'API"""
-    return jsonify({"message": "API en ligne", "status": "success"}), 200
+    """Endpoint racine pour interagir avec l'API via un formulaire simple."""
+    html_form = """
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Prédiction API</title>
+        <script>
+            async function fetchPrediction() {
+                const id = document.getElementById("clientId").value;
+                const resultDiv = document.getElementById("result");
+                resultDiv.innerHTML = "Chargement...";
+
+                try {
+                    const response = await fetch("/predict", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify({ SK_ID_CURR: id })
+                    });
+
+                    const data = await response.json();
+                    if (response.ok) {
+                        resultDiv.innerHTML = `
+                            <h3>Résultat :</h3>
+                            <p><strong>ID Client :</strong> ${data.SK_ID_CURR}</p>
+                            <p><strong>Probabilité de défaut :</strong> ${data.probability_of_default}</p>
+                            <p><strong>Décision :</strong> ${data.decision}</p>
+                        `;
+                    } else {
+                        resultDiv.innerHTML = `<p style="color:red;">Erreur : ${data.error}</p>`;
+                    }
+                } catch (error) {
+                    resultDiv.innerHTML = `<p style="color:red;">Erreur réseau : ${error.message}</p>`;
+                }
+            }
+        </script>
+    </head>
+    <body>
+        <h1>Prédiction API</h1>
+        <p>Entrez un ID client pour obtenir la prédiction :</p>
+        <input type="number" id="clientId" placeholder="ID Client" required>
+        <button onclick="fetchPrediction()">Envoyer</button>
+        <div id="result" style="margin-top: 20px;"></div>
+    </body>
+    </html>
+    """
+    return html_form
 
 @app.route("/get_client_ids", methods=["GET"])
 def get_client_ids():
