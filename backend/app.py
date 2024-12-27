@@ -44,22 +44,51 @@ else:
 
 @app.route("/", methods=["GET"])
 def index():
-    """Endpoint racine pour afficher la page HTML du formulaire."""
+    """Endpoint racine pour afficher un formulaire simple."""
     html_form = """
     <!DOCTYPE html>
     <html lang="fr">
     <head>
         <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Prédiction API</title>
+        <script>
+            async function fetchPrediction() {
+                const id = document.getElementById("clientId").value;
+                const resultDiv = document.getElementById("result");
+                resultDiv.textContent = "Chargement...";
+
+                try {
+                    const response = await fetch("/predict", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ SK_ID_CURR: id })
+                    });
+
+                    const data = await response.json();
+                    if (response.ok) {
+                        resultDiv.innerHTML = `
+                            <h3>Résultat :</h3>
+                            <p>ID Client : ${data.SK_ID_CURR}</p>
+                            <p>Probabilité : ${data.probability_of_default}</p>
+                            <p>Décision : ${data.decision}</p>
+                        `;
+                    } else {
+                        resultDiv.textContent = `Erreur : ${data.error}`;
+                    }
+                } catch (error) {
+                    resultDiv.textContent = `Erreur réseau : ${error.message}`;
+                }
+            }
+        </script>
     </head>
     <body>
-        <h1>Prédiction de Défaut</h1>
-        <form method="POST" action="/predict">
-            <label for="clientId">ID Client :</label>
-            <input type="number" id="clientId" name="SK_ID_CURR" required>
+        <h1>Prédiction</h1>
+        <form onsubmit="event.preventDefault(); fetchPrediction();">
+            <label>ID Client :</label>
+            <input type="number" id="clientId" required>
             <button type="submit">Envoyer</button>
         </form>
+        <div id="result"></div>
     </body>
     </html>
     """
