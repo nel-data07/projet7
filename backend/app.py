@@ -226,7 +226,7 @@ def predict_with_custom_values():
         # Retourner la réponse
         return jsonify({
             "SK_ID_CURR": sk_id_curr,
-            "probability_of_default": round(probability_of_default, 4),
+            "probability_of_default": round(probability_of_default, 2),
             "shap_values": shap_values.tolist(),
             "feature_names": required_features,
             "client_info": client_info,
