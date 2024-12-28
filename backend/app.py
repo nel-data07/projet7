@@ -145,7 +145,7 @@ def predict():
             "probability_of_default": probability_of_default,
             "shap_values": shap_values.tolist(),
             "feature_names": required_features,
-            "client_info": client_info
+            "client_info": client_info,
             "decision": decision            
         }), 200
 
