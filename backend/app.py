@@ -203,6 +203,9 @@ def predict_with_custom_values():
         probability_of_default = predictions[0][1]  # Probabilité pour la classe positive
         logging.info(f"Probabilité de défaut de paiement avec valeurs personnalisées : {probability_of_default}")
 
+        # Décision basée sur le seuil
+        decision = "Crédit refusé" if probability_of_default > 0.09 else "Crédit accepté"
+        
         # Calcul des valeurs SHAP
         explainer = shap.TreeExplainer(model)
         shap_values = explainer.shap_values(data_for_prediction)
@@ -219,10 +222,11 @@ def predict_with_custom_values():
         # Retourner la réponse
         return jsonify({
             "SK_ID_CURR": sk_id_curr,
-            "probability_of_default": probability_of_default,
+            "probability_of_default": round(probability_of_default, 4),
             "shap_values": shap_values.tolist(),
             "feature_names": required_features,
-            "client_info": client_info
+            "client_info": client_info,
+            "decision": decision            
         }), 200
 
     except Exception as e:
