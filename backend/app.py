@@ -93,6 +93,25 @@ def index():
     </html>
     """
     return html_form
+@app.route("/predict", methods=["POST"])
+def predict():
+    """Endpoint pour effectuer une prédiction."""
+    try:
+        data = request.get_json()
+        sk_id_curr = int(data.get("SK_ID_CURR", 0))
+        # Simuler une réponse pour l'exemple
+        probability_of_default = 0.0565
+        decision = "Crédit accepté" if probability_of_default <= 0.09 else "Crédit refusé"
+        return jsonify({
+            "SK_ID_CURR": sk_id_curr,
+            "probability_of_default": probability_of_default,
+            "decision": decision
+        }), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000)
 
 @app.route("/get_client_ids", methods=["GET"])
 def get_client_ids():
