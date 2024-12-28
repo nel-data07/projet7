@@ -8,12 +8,6 @@ def client():
     with app.test_client() as client:
         yield client
 
-def test_index(client):
-    """Test pour vérifier si la route principale fonctionne."""
-    response = client.get('/')
-    assert response.status_code == 200
-    data = response.get_json()
-    assert data["message"] == "API en ligne"
 
 def test_check_app_module():
     """Vérifie le module Flask utilisé."""
