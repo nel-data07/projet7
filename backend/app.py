@@ -99,8 +99,6 @@ def predict():
     try:
         data = request.get_json()
         sk_id_curr = int(data.get("SK_ID_CURR", 0))
-        # Simuler une réponse pour l'exemple
-        probability_of_default = 0.0565
         decision = "Crédit accepté" if probability_of_default <= 0.09 else "Crédit refusé"
         return jsonify({
             "SK_ID_CURR": sk_id_curr,
