@@ -94,46 +94,6 @@ def index():
     """
     return html_form
 
-@app.route("/predict", methods=["POST"])
-def predict():
-    """Endpoint pour effectuer une prédiction à partir d'un ID client."""
-    try:
-        # Récupérer les données envoyées
-        data = request.get_json()
-        if "SK_ID_CURR" not in data:
-            return jsonify({"error": "ID client manquant."}), 400
-
-        sk_id_curr = int(data["SK_ID_CURR"])
-
-        # Trouver les données du client
-        client_data = clients_data[clients_data["SK_ID_CURR"] == sk_id_curr]
-        if client_data.empty:
-            return jsonify({"error": f"Client {sk_id_curr} introuvable."}), 404
-
-        # Préparer les données pour la prédiction
-        data_for_prediction = client_data[required_features]
-
-        # Effectuer la prédiction
-        predictions = model.predict_proba(data_for_prediction)
-        probability_of_default = predictions[0][1]  # Probabilité pour la classe positive
-
-        # Décision basée sur le seuil
-        decision = "Crédit refusé" if probability_of_default > 0.09 else "Crédit accepté"
-
-        # Retourner la réponse
-        return jsonify({
-            "SK_ID_CURR": sk_id_curr,
-            "probability_of_default": round(probability_of_default, 4),
-            "decision": decision
-        }), 200
-
-    except Exception as e:
-        logging.error(f"Erreur lors de la prédiction : {e}")
-        return jsonify({"error": str(e)}), 500
-
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
-
 @app.route("/get_client_ids", methods=["GET"])
 def get_client_ids():
     """Récupérer la liste des IDs clients disponibles"""
@@ -163,6 +123,9 @@ def predict():
         probability_of_default = predictions[0][1]  # Probabilité pour la classe positive
         logging.info(f"Probabilité de défaut de paiement : {probability_of_default}")
 
+        # Décision basée sur le seuil
+        decision = "Crédit refusé" if probability_of_default > 0.09 else "Crédit accepté"
+
         # Calcul des valeurs SHAP
         explainer = shap.TreeExplainer(model)
         shap_values = explainer.shap_values(data_for_prediction)
@@ -183,6 +146,7 @@ def predict():
             "shap_values": shap_values.tolist(),
             "feature_names": required_features,
             "client_info": client_info
+            "decision": decision            
         }), 200
 
     except Exception as e:
