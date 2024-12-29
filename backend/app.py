@@ -142,7 +142,7 @@ def predict():
         # Retourner la réponse
         return jsonify({
             "SK_ID_CURR": sk_id_curr,
-            "probability_of_default":  round(probability_of_default, 2),
+            "probability_of_default": float(f"{probability_of_default:.2f}"),
             "shap_values": shap_values.tolist(),
             "feature_names": required_features,
             "client_info": client_info,
